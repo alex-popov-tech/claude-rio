@@ -1,0 +1,61 @@
+{
+  "name": "better-hooks",
+  "version": "0.3.0",
+  "description": "Skill-based hooks system for Claude Code CLI with two-tier architecture for optimal performance",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "hooks",
+    "cli",
+    "ai",
+    "skills",
+    "automation"
+  ],
+  "homepage": "https://github.com/yourusername/better-hooks#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/better-hooks/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/better-hooks.git"
+  },
+  "license": "MIT",
+  "author": "Your Name <your.email@example.com>",
+  "main": "cli/index.js",
+  "bin": {
+    "better-hooks": "./cli/index.js"
+  },
+  "files": [
+    "cli/",
+    "hooks/",
+    "shared/",
+    "matchers/",
+    "examples/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "echo 'Tests not yet implemented' && exit 0",
+    "test:integration": "bash test/integration/test-init.sh",
+    "dev": "node cli/index.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write '**/*.{js,json}'",
+    "format:check": "prettier --check '**/*.{js,json}'",
+    "prepublishOnly": "npm run lint && npm run format:check"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^12.0.0",
+    "fs-extra": "^11.2.0",
+    "ora": "^5.4.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.6.2"
+  }
+}

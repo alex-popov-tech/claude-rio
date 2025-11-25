@@ -1,0 +1,40 @@
+# Development files - not distributed in npm package
+.claude/
+docs/
+examples/
+test/
+scripts/
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Development documentation
+plan.md
+TODO.md
+hooks.pdf
+IMPLEMENTATION.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Misc
+.DS_Store
+*.log
+test-payloads/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+coverage/
+.nyc_output/
