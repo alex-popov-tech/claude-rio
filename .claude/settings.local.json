@@ -2,7 +2,31 @@
   "permissions": {
     "allow": [
       "mcp__sequential-thinking__sequentialthinking",
-      "WebSearch"
+      "WebSearch",
+      "Bash(better-hooks:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(bash:*)",
+      "Bash(test:*)",
+      "Bash(npm pack:*)",
+      "Bash(node cli/index.js:*)",
+      "Bash(node /Users/alex/me/pet/better-hooks/cli/index.js:*)",
+      "Bash(node -e:*)",
+      "Bash(claude:*)",
+      "WebFetch(domain:www.claude.com)",
+      "WebFetch(domain:claudelog.com)",
+      "WebFetch(domain:www.anthropic.com)",
+      "Bash(git log:*)",
+      "Bash(node:*)",
+      "Bash(git -C /Users/alex/me/pet/better-hooks status --short)",
+      "Bash(git -C /Users/alex/me/pet/better-hooks status -s)",
+      "Bash(git -C /Users/alex/me/pet/better-hooks log --oneline -10)",
+      "Bash(npm install:*)",
+      "Bash(npm run format:*)",
+      "Bash(npm run lint:fix:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run prepublishOnly:*)"
     ],
     "deny": [],
     "ask": []
