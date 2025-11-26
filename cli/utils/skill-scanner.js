@@ -37,7 +37,7 @@ async function scanDirectory(dir, type) {
   const haveMatchers = [];
 
   for (const item of items) {
-    const matcherPath = path.join(item.path, 'better-hooks', 'UserPromptSubmit.matcher.js');
+    const matcherPath = path.join(item.path, 'rio', 'UserPromptSubmit.matcher.js');
     const hasMatcherFile = await fs.pathExists(matcherPath);
 
     if (hasMatcherFile) {
@@ -51,55 +51,22 @@ async function scanDirectory(dir, type) {
 }
 
 /**
- * Scan both project and user directories for skills and agents
- * Project items take precedence over user items with the same name
+ * Scan skills and agents in a single scope (project OR user)
  *
+ * @param {string} baseDir - Base directory (process.cwd() or user home)
  * @returns {Promise<{needMatchers: Array<{name: string, path: string, type: string}>, haveMatchers: Array<{name: string, path: string, type: string}>}>}
  */
-async function scanSkills() {
-  const projectSkillsDir = getSkillsDir(process.cwd());
-  const userSkillsDir = getSkillsDir(require('os').homedir());
-  const projectAgentsDir = getAgentsDir(process.cwd());
-  const userAgentsDir = getAgentsDir(require('os').homedir());
+async function scanSkills(baseDir) {
+  const skillsDir = getSkillsDir(baseDir);
+  const agentsDir = getAgentsDir(baseDir);
 
-  // Scan all directories
-  const projectSkillsResults = await scanDirectory(projectSkillsDir, 'skill');
-  const userSkillsResults = await scanDirectory(userSkillsDir, 'skill');
-  const projectAgentsResults = await scanDirectory(projectAgentsDir, 'agent');
-  const userAgentsResults = await scanDirectory(userAgentsDir, 'agent');
+  const skillsResults = await scanDirectory(skillsDir, 'skill');
+  const agentsResults = await scanDirectory(agentsDir, 'agent');
 
-  // Merge results, with project taking precedence over user
-  const allItems = new Map();
-
-  // Add user items first (skills and agents)
-  for (const item of [...userSkillsResults.needMatchers, ...userAgentsResults.needMatchers]) {
-    allItems.set(`${item.type}:${item.name}`, { ...item, needMatcher: true });
-  }
-  for (const item of [...userSkillsResults.haveMatchers, ...userAgentsResults.haveMatchers]) {
-    allItems.set(`${item.type}:${item.name}`, { ...item, needMatcher: false });
-  }
-
-  // Override with project items (they take precedence)
-  for (const item of [...projectSkillsResults.needMatchers, ...projectAgentsResults.needMatchers]) {
-    allItems.set(`${item.type}:${item.name}`, { ...item, needMatcher: true });
-  }
-  for (const item of [...projectSkillsResults.haveMatchers, ...projectAgentsResults.haveMatchers]) {
-    allItems.set(`${item.type}:${item.name}`, { ...item, needMatcher: false });
-  }
-
-  // Split back into needMatchers and haveMatchers
-  const needMatchers = [];
-  const haveMatchers = [];
-
-  for (const item of allItems.values()) {
-    if (item.needMatcher) {
-      needMatchers.push({ name: item.name, path: item.path, type: item.type });
-    } else {
-      haveMatchers.push({ name: item.name, path: item.path, type: item.type });
-    }
-  }
-
-  return { needMatchers, haveMatchers };
+  return {
+    needMatchers: [...skillsResults.needMatchers, ...agentsResults.needMatchers],
+    haveMatchers: [...skillsResults.haveMatchers, ...agentsResults.haveMatchers],
+  };
 }
 
 /**
