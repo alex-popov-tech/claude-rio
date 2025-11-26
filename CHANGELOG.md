@@ -5,6 +5,25 @@ All notable changes to claude-rio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-11-27
+
+### Changed
+
+- **Matcher file extension**: Migrated from `.js` to `.cjs` extension for CommonJS compatibility across mixed ESM/CJS projects
+- **Matcher naming convention**: Changed from `UserPromptSubmit.matcher.js` to `UserPromptSubmit.rio.matcher.cjs` for clearer identification
+- **Separate skills and agents discovery**: Hook now searches skills at `.claude/skills/*/rio/UserPromptSubmit.matcher.cjs` and agents at `.claude/agents/*.rio.matcher.cjs`
+- **Inlined validation logic**: Removed shared validation module, validation is now self-contained in matcher-validator.js
+
+### Added
+
+- **Remove command**: New `claude-rio remove` command to uninstall hooks and clean up matchers
+- Support for agent-level matchers (sibling to `.md` agent files)
+
+### Removed
+
+- `shared/` directory - validation logic inlined into CLI utilities
+- Legacy `.js` matcher files replaced with `.cjs` versions
+
 ## [1.0.0] - 2025-11-26
 
 ### Added
@@ -50,4 +69,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Matcher validation (CLI and runtime)
 - Universal matcher template for easy customization
 
+[1.1.0]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.0
 [1.0.0]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.0.0
