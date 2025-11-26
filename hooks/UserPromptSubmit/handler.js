@@ -54,15 +54,25 @@ async function main() {
     .filter((p) => p.length > 0);
 
   // Build matcher file info from paths
-  // Path structure: .../skills/<name>/rio/UserPromptSubmit.matcher.js
-  // We need to extract <name> by going up two directories from the matcher file
-  // Type is detected from the path (.claude/skills/ vs .claude/agents/)
+  // Skills and agents have different path structures:
+  // - Skills: .../skills/<name>/rio/UserPromptSubmit.matcher.cjs (name from grandparent dir)
+  // - Agents: .../agents/<name>.rio.matcher.cjs (name from filename, without .rio.matcher.cjs)
   const matcherFiles = matcherPaths.map((matcherPath) => {
-    const rioDir = path.dirname(matcherPath); // .../name/rio
-    const itemDir = path.dirname(rioDir); // .../name
-    const name = path.basename(itemDir); // name
     const isAgent =
       matcherPath.includes('/.claude/agents/') || matcherPath.includes('\\.claude\\agents\\');
+
+    let name;
+    if (isAgent) {
+      // Agent matcher: extract name from filename (e.g., "my-agent.rio.matcher.cjs" -> "my-agent")
+      const filename = path.basename(matcherPath);
+      name = filename.replace(/\.rio\.matcher\.cjs$/, '');
+    } else {
+      // Skill matcher: extract name from grandparent directory
+      const rioDir = path.dirname(matcherPath); // .../name/rio
+      const itemDir = path.dirname(rioDir); // .../name
+      name = path.basename(itemDir); // name
+    }
+
     return {
       name: name,
       matcherPath: matcherPath,
@@ -119,7 +129,10 @@ async function main() {
       },
     };
 
-    process.stdout.write(JSON.stringify(output) + '\n');
+    console.log();
+    console.log(JSON.stringify(output, null, 2));
+    console.log();
+    console.log(directiveMessage);
   }
 
   process.exit(0);

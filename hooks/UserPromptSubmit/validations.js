@@ -10,7 +10,6 @@
 
 const { ok, err } = require('../utils/result');
 const { requireNonEmptyObject, requireNonEmptyString } = require('../utils/validations');
-const { checkMatcherResultCore } = require('../../../shared/matcher-validation-core');
 
 /**
  * @typedef {import('./types').UserPromptSubmitPayload} UserPromptSubmitPayload
@@ -105,21 +104,67 @@ function validateMatcherModule(mod) {
 }
 
 /**
- * Validate matcher result using shared core validation.
- * Wraps core validation to return hooks-style {ok, value?, error} format.
+ * Validate matcher result.
  *
  * IMPORTANT: All fields are MANDATORY and must not be undefined/null.
+ *
+ * Required schema:
+ * - version: string "1.0" (non-empty, trimmed)
+ * - relevant: boolean
+ * - priority: "critical" | "high" | "medium" | "low"
+ * - relevance: "high" | "medium" | "low"
  *
  * @param {any} result - The matcher result to validate
  * @returns {{ok: boolean, value?: MatcherResult, error?: string}}
  */
 function validateMatcherResult(result) {
-  const validation = checkMatcherResultCore(result);
+  // Check that result is an object
+  if (!result || typeof result !== 'object') {
+    return err(`Matcher result must be an object (got type: ${typeof result})`);
+  }
 
-  if (!validation.isValid) {
-    // Return first error in hooks format
-    const firstError = validation.errors[0];
-    return err(firstError.message);
+  // Validate version field (MANDATORY - no undefined/null)
+  if (result.version === undefined || result.version === null) {
+    return err('Matcher result must have a "version" field (cannot be undefined or null)');
+  }
+  if (typeof result.version !== 'string') {
+    return err(`Matcher result "version" must be a string (got type: ${typeof result.version})`);
+  }
+  if (!result.version.trim()) {
+    return err('Matcher result "version" must be a non-empty string');
+  }
+  if (result.version !== '1.0') {
+    return err(`Matcher result "version" must be "1.0" (got: ${result.version})`);
+  }
+
+  // Validate relevant field (MANDATORY - no undefined/null)
+  if (result.relevant === undefined || result.relevant === null) {
+    return err('Matcher result must have a "relevant" field (cannot be undefined or null)');
+  }
+  if (typeof result.relevant !== 'boolean') {
+    return err(`Matcher result "relevant" must be a boolean (got type: ${typeof result.relevant})`);
+  }
+
+  // Validate priority field (MANDATORY - no undefined/null)
+  if (result.priority === undefined || result.priority === null) {
+    return err('Matcher result must have a "priority" field (cannot be undefined or null)');
+  }
+  const validPriorities = ['critical', 'high', 'medium', 'low'];
+  if (!validPriorities.includes(result.priority)) {
+    return err(
+      `Matcher result "priority" must be one of: ${validPriorities.join(', ')} (got: ${result.priority})`
+    );
+  }
+
+  // Validate relevance field (MANDATORY - no undefined/null)
+  if (result.relevance === undefined || result.relevance === null) {
+    return err('Matcher result must have a "relevance" field (cannot be undefined or null)');
+  }
+  const validRelevances = ['high', 'medium', 'low'];
+  if (!validRelevances.includes(result.relevance)) {
+    return err(
+      `Matcher result "relevance" must be one of: ${validRelevances.join(', ')} (got: ${result.relevance})`
+    );
   }
 
   return ok(result);

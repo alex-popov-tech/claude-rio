@@ -7,12 +7,12 @@ const path = require('path');
 
 /**
  * Get the path to the universal matcher template
- * @returns {string} Path to matchers/UserPromptSubmit.matcher.js
+ * @returns {string} Path to matchers/UserPromptSubmit.rio.matcher.cjs
  */
 function getMatcherTemplatePath() {
   // Assume claude-rio is installed as a package
   // Go up from cli/utils/ to package root
-  return path.join(__dirname, '..', '..', 'matchers', 'UserPromptSubmit.matcher.js');
+  return path.join(__dirname, '..', '..', 'matchers', 'UserPromptSubmit.rio.matcher.cjs');
 }
 
 /**
@@ -85,7 +85,7 @@ Show your reasoning briefly, then create the matcher file.`;
  *
  * @param {Object} options - Prompt building options
  * @param {string} options.skillName - Name of the agent (using skillName for consistency)
- * @param {string} options.skillPath - Path to the agent directory
+ * @param {string} options.skillPath - Path to the agent .md file (agents are individual .md files)
  * @param {string} options.matcherFilePath - Where Claude should write the matcher
  * @returns {Promise<string>} The complete prompt
  */
@@ -94,23 +94,23 @@ async function buildAgentPrompt(options) {
   const templatePath = getMatcherTemplatePath();
 
   // Build the prompt for agent matcher generation
+  // Note: skillPath is the full path to the .md file for agents
   const prompt = `You are generating a UserPromptSubmit matcher for a Claude Code AGENT (subagent).
 
 ## YOUR TASK
 
 Generate a matcher for the agent: **${skillName}**
 
-**Agent directory:** ${skillPath}
+**Agent definition file:** ${skillPath}
 **Matcher file to create:** ${matcherFilePath}
 **Matcher template:** ${templatePath}
 
 ## INSTRUCTIONS
 
-1. Use the Read tool to read ${skillPath}/agent.md (if it exists) to understand what this agent does
-2. If agent.md doesn't exist, infer from the agent name "${skillName}"
-3. Use the Read tool to read the matcher template at: ${templatePath}
-4. Extract 5-8 relevant keywords for this agent (delegation language, complex reasoning keywords)
-5. Use the Write tool to copy the template to ${matcherFilePath} and fill in the keywords array
+1. Use the Read tool to read the agent definition at: ${skillPath}
+2. Use the Read tool to read the matcher template at: ${templatePath}
+3. Extract 5-8 relevant keywords for this agent (delegation language, complex reasoning keywords)
+4. Use the Write tool to copy the template to ${matcherFilePath} and fill in the keywords array
 
 ## KEYWORD SELECTION FOR AGENTS
 

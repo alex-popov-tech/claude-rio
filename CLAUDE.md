@@ -27,10 +27,10 @@ claude-rio/
 │       ├── hook.sh                # Shell wrapper (finds matchers)
 │       ├── handler.js             # Node.js handler (executes matchers)
 │       ├── types.js               # JSDoc type definitions
-│       ├── validations.js         # Payload and result validation
+│       ├── validations.js         # Payload and result validation (inlined)
 │       └── formatter.js           # Output formatting
 ├── matchers/                      # Universal matcher template
-│   └── UserPromptSubmit.matcher.js
+│   └── UserPromptSubmit.rio.matcher.cjs
 ├── examples/                      # Example matcher patterns
 │   ├── keyword/
 │   ├── typo-tolerant/
@@ -50,7 +50,8 @@ The system uses a **shell-first approach** to minimize overhead:
 
 1. **Shell wrapper (`hook.sh`)** runs first
    - Uses `find` command to locate matcher files
-   - Searches `.claude/skills/*/rio/` and `.claude/agents/*/rio/`
+   - Searches skills: `.claude/skills/*/rio/UserPromptSubmit.matcher.cjs`
+   - Searches agents: `.claude/agents/*.rio.matcher.cjs`
    - If no matchers found → exits immediately (~10-20ms)
    - If matchers found → passes paths to Node.js via `MATCHER_PATHS` env var
 
@@ -67,7 +68,6 @@ The system uses a **shell-first approach** to minimize overhead:
 
 Matchers are JavaScript functions that determine skill/agent relevance:
 
-- **Location:** `.claude/skills/<name>/rio/UserPromptSubmit.matcher.js` or `.claude/agents/<name>/rio/UserPromptSubmit.matcher.js`
 - **Input:** Context object with `{prompt, cwd, transcriptPath, sessionId, permissionMode, meta, transcript}`
 - **Output:** `{version: "1.0", relevant: boolean, priority: string, relevance: string}`
 - **Validation:** All fields are MANDATORY (no undefined/null allowed)
@@ -78,16 +78,23 @@ Matchers are JavaScript functions that determine skill/agent relevance:
 
 ### Skills vs Agents
 
-- **Skills** (`.claude/skills/`): Deterministic workflows (build, test, lint)
-- **Agents** (`.claude/agents/`): Complex reasoning tasks (review, refactor, analyze)
-- Both use identical matcher patterns
-- Type is auto-detected from path or can be explicitly set
+Per Claude Code documentation, skills and agents have **different structures**:
+
+**Skills** (subdirectories with SKILL.md):
+- Location: `.claude/skills/<skill-name>/SKILL.md`
+- Matcher: `.claude/skills/<skill-name>/rio/UserPromptSubmit.matcher.cjs`
+- Purpose: Deterministic workflows (build, test, lint)
+
+**Agents** (individual .md files):
+- Location: `.claude/agents/<agent-name>.md`
+- Matcher: `.claude/agents/<agent-name>.rio.matcher.cjs` (sibling to .md file)
+- Purpose: Complex reasoning tasks (review, refactor, analyze)
 
 ## Development Guidelines
 
 ### Adding Examples
 
-Examples live in `examples/<pattern-name>/UserPromptSubmit.matcher.js`. Each example should:
+Examples live in `examples/<pattern-name>/UserPromptSubmit.rio.matcher.cjs`. Each example should:
 - Be a complete, working matcher (not a template with TODOs)
 - Include comprehensive inline comments
 - Demonstrate a specific matching pattern
@@ -161,7 +168,8 @@ Follow the pattern established by `UserPromptSubmit/`.
 - **Matcher fields are mandatory:** version, relevant, priority, relevance (no undefined/null)
 - **Validation is strict:** Both CLI and runtime validation enforce all fields
 - **Shell wrappers are OS-specific:** `.sh` for Unix, `.ps1` for Windows
-- **Template references:** CLI uses `matchers/UserPromptSubmit.matcher.js` as template
+- **Template references:** CLI uses `matchers/UserPromptSubmit.rio.matcher.cjs` as template
+- **CommonJS extension:** Matchers use `.cjs` extension to ensure CommonJS compatibility regardless of host project's `package.json` "type" setting
 - **Auto-generation:** `setup --skills --agents` uses Claude Haiku for fast, cost-effective generation
 
 ## Reference Files

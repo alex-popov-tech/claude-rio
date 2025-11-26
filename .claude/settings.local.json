@@ -29,7 +29,8 @@
       "Bash(npm run prepublishOnly:*)",
       "Skill(eslint-detector)",
       "Skill(typescript-detector)",
-      "Bash(npm run format:check:*)"
+      "Bash(npm run format:check:*)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []

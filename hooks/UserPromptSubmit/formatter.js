@@ -13,8 +13,8 @@
  */
 
 /**
- * Format active skills and agents with directive, action-oriented language for better Claude adherence.
- * Uses imperative instructions and explicit tool invocation syntax.
+ * Format active skills and agents with visual boxes and emoji indicators for better clarity.
+ * Uses a hierarchical priority-based display system with box-drawing characters.
  *
  * @param {ActiveSkill[]} items - Array of active skills and agents
  * @returns {string} Formatted directive message
@@ -39,69 +39,69 @@ function formatActiveSkillsAsDirective(items) {
   medium.sort(sortByRelevance);
   low.sort(sortByRelevance);
 
-  let message = '';
+  // Build output with visual boxes
+  let output = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  output += '🎯 SKILL/AGENT ACTIVATION CHECK\n';
+  output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
 
-  // Critical items get strongest directive language
+  // Critical items (required)
   if (critical.length > 0) {
-    message += 'BEFORE PROCEEDING WITH THIS REQUEST:\n\n';
-    message += 'CRITICAL REQUIREMENT - Auto-invoke immediately:\n';
-
-    critical.forEach((item, index) => {
-      if (item.type === 'skill') {
-        message += `${index + 1}. Invoke the Skill tool with parameter: skill="${item.name}"\n`;
-      } else if (item.type === 'agent') {
-        message += `${index + 1}. Delegate to subagent using Task tool with parameter: subagent_type="${item.name}"\n`;
-      }
+    output += '⚠️  CRITICAL (REQUIRED):\n';
+    critical.forEach((item) => {
+      const toolInstruction =
+        item.type === 'skill'
+          ? `Skill tool, skill="${item.name}"`
+          : `Task tool, subagent_type="${item.name}"`;
+      output += `  → ${item.name}: ${toolInstruction}\n`;
     });
-
-    message += '\n';
-    message += 'IMPORTANT:\n';
-    message += '- These MUST be invoked as your FIRST action\n';
-    message += '- Wait for each to complete its workflow\n';
-    message += '- Do NOT proceed with manual tool usage that these handle\n';
-    message += '\n';
+    output += '\n';
   }
 
-  // High priority items get strong recommendations
+  // High priority items (recommended)
   if (high.length > 0) {
-    if (critical.length === 0) {
-      message += 'BEFORE PROCEEDING:\n\n';
-    }
-
-    message += 'STRONGLY RECOMMENDED:\n';
+    output += '📚 RECOMMENDED:\n';
     high.forEach((item) => {
-      if (item.type === 'skill') {
-        message += `- ${item.name}: Use Skill tool with skill="${item.name}"\n`;
-      } else if (item.type === 'agent') {
-        message += `- ${item.name}: Delegate using Task tool with subagent_type="${item.name}"\n`;
-      }
+      const toolInstruction =
+        item.type === 'skill'
+          ? `Skill tool, skill="${item.name}"`
+          : `Task tool, subagent_type="${item.name}"`;
+      output += `  → ${item.name}: ${toolInstruction}\n`;
     });
-    message += '\n';
+    output += '\n';
   }
 
-  // Medium priority items get suggestions
+  // Medium priority items (suggested)
   if (medium.length > 0) {
-    message += 'SUGGESTED (consider invoking):\n';
+    output += '💡 SUGGESTED:\n';
     medium.forEach((item) => {
-      if (item.type === 'skill') {
-        message += `- ${item.name}: Skill tool, skill="${item.name}"\n`;
-      } else if (item.type === 'agent') {
-        message += `- ${item.name}: Task tool, subagent_type="${item.name}"\n`;
-      }
+      const toolInstruction =
+        item.type === 'skill'
+          ? `Skill tool, skill="${item.name}"`
+          : `Task tool, subagent_type="${item.name}"`;
+      output += `  → ${item.name}: ${toolInstruction}\n`;
     });
-    message += '\n';
+    output += '\n';
   }
 
-  // Low priority items get minimal mention
+  // Low priority items (optional)
   if (low.length > 0) {
-    message += 'OPTIONAL (available if needed):\n';
+    output += '📌 OPTIONAL:\n';
     low.forEach((item) => {
-      message += `- ${item.name} (${item.type})\n`;
+      const toolInstruction =
+        item.type === 'skill'
+          ? `Skill tool, skill="${item.name}"`
+          : `Task tool, subagent_type="${item.name}"`;
+      output += `  → ${item.name}: ${toolInstruction}\n`;
     });
-    message += '\n';
+    output += '\n';
   }
 
-  return message.trim();
+  // Footer with action directive
+  output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  output += 'ACTION: Consider using the above tools BEFORE responding\n';
+  output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+
+  return output;
 }
 
 module.exports = {
