@@ -4,7 +4,6 @@
  */
 
 const path = require('path');
-const fs = require('fs');
 
 /**
  * Get the path to the universal matcher template

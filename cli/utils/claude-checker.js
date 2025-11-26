@@ -15,7 +15,7 @@ function isClaudeAvailable() {
     // and works in bash, zsh, sh
     execSync('command -v claude', { stdio: 'ignore' });
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

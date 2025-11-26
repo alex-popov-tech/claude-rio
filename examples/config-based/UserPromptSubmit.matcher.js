@@ -74,7 +74,7 @@ module.exports = function (context) {
         };
       }
     }
-  } catch (error) {
+  } catch {
     // Config file missing or malformed
     // Silently fall back to default configuration
   }

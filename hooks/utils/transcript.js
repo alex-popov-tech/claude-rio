@@ -169,13 +169,13 @@ async function parseInitialMessage(transcriptPath) {
             return message.message.content;
           }
         }
-      } catch (_e) {
+      } catch {
         // Skip invalid JSON lines
       }
     }
 
     return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -199,11 +199,11 @@ async function parseAllMessages(transcriptPath) {
 
       try {
         messages.push(JSON.parse(line));
-      } catch (_e) {
+      } catch {
         // Skip invalid JSON lines
       }
     }
-  } catch (error) {
+  } catch {
     // Return empty array on error
   }
 

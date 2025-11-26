@@ -5,7 +5,7 @@
 
 const fs = require('fs-extra');
 const path = require('path');
-const { isWindows, isUnix, getShellWrapperName } = require('./platform');
+const { isWindows, isUnix } = require('./platform');
 
 /**
  * Copy hook templates to target directory with OS-specific script selection.
@@ -52,8 +52,6 @@ async function copyTemplates(targetDir, options = {}) {
  * @returns {Promise<void>}
  */
 async function copyHooksWithOSFilter(source, target) {
-  // Get the appropriate shell wrapper name for this OS
-  const shellWrapper = getShellWrapperName();
   const excludeWrapper = isWindows() ? 'hook.sh' : 'hook.ps1';
 
   // Copy hooks directory with filtering
@@ -141,7 +139,7 @@ async function createSettingsJson(claudeDir, isUserLevel = false) {
       if (!settings.hooks) {
         settings.hooks = {};
       }
-    } catch (error) {
+    } catch {
       // If settings.json is malformed, start fresh but warn
       console.warn(`Warning: Could not parse existing settings.json, creating new one.`);
       settings = { hooks: {} };
