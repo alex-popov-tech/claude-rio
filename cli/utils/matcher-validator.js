@@ -5,7 +5,6 @@
 
 const fs = require('fs-extra');
 const path = require('path');
-const { checkMatcherResultCore } = require('../../shared/matcher-validation-core');
 
 /**
  * Validation result
@@ -84,22 +83,106 @@ async function validateMatcherFile(matcherPath) {
 }
 
 /**
- * Validate matcher result using shared core validation.
- * Wraps core validation to return CLI-style {valid, error, details} format.
+ * Validate matcher result.
+ *
+ * IMPORTANT: All fields are MANDATORY and must not be undefined/null.
+ *
+ * Required schema:
+ * - version: string "1.0" (non-empty, trimmed)
+ * - relevant: boolean
+ * - priority: "critical" | "high" | "medium" | "low"
+ * - relevance: "high" | "medium" | "low"
  *
  * @param {any} result - The result object from the matcher
  * @returns {ValidationResult} Validation result with error/details
  */
 function validateMatcherResult(result) {
-  const validation = checkMatcherResultCore(result);
-
-  if (!validation.isValid) {
-    // Return first error in CLI format with separate error/details fields
-    const firstError = validation.errors[0];
+  // Check that result is an object
+  if (!result || typeof result !== 'object') {
     return {
       valid: false,
-      error: firstError.message,
-      details: firstError.details || `Field: ${firstError.field}, Code: ${firstError.code}`,
+      error: 'Matcher result must be an object',
+      details: `Got type: ${typeof result}`,
+    };
+  }
+
+  // Validate version field (MANDATORY - no undefined/null)
+  if (result.version === undefined || result.version === null) {
+    return {
+      valid: false,
+      error: 'Matcher result must have a "version" field (cannot be undefined or null)',
+      details: 'Field is missing or null',
+    };
+  }
+  if (typeof result.version !== 'string') {
+    return {
+      valid: false,
+      error: 'Matcher result "version" must be a string',
+      details: `Got type: ${typeof result.version}`,
+    };
+  }
+  if (!result.version.trim()) {
+    return {
+      valid: false,
+      error: 'Matcher result "version" must be a non-empty string',
+      details: 'Version string is empty or whitespace-only',
+    };
+  }
+  if (result.version !== '1.0') {
+    return {
+      valid: false,
+      error: 'Matcher result "version" must be "1.0"',
+      details: `Got: ${result.version}`,
+    };
+  }
+
+  // Validate relevant field (MANDATORY - no undefined/null)
+  if (result.relevant === undefined || result.relevant === null) {
+    return {
+      valid: false,
+      error: 'Matcher result must have a "relevant" field (cannot be undefined or null)',
+      details: 'Field is missing or null',
+    };
+  }
+  if (typeof result.relevant !== 'boolean') {
+    return {
+      valid: false,
+      error: 'Matcher result "relevant" must be a boolean',
+      details: `Got type: ${typeof result.relevant}`,
+    };
+  }
+
+  // Validate priority field (MANDATORY - no undefined/null)
+  if (result.priority === undefined || result.priority === null) {
+    return {
+      valid: false,
+      error: 'Matcher result must have a "priority" field (cannot be undefined or null)',
+      details: 'Field is missing or null',
+    };
+  }
+  const validPriorities = ['critical', 'high', 'medium', 'low'];
+  if (!validPriorities.includes(result.priority)) {
+    return {
+      valid: false,
+      error: `Matcher result "priority" must be one of: ${validPriorities.join(', ')}`,
+      details: `Got: ${result.priority}`,
+    };
+  }
+
+  // Validate relevance field (MANDATORY - no undefined/null)
+  if (result.relevance === undefined || result.relevance === null) {
+    return {
+      valid: false,
+      error: 'Matcher result must have a "relevance" field (cannot be undefined or null)',
+      details: 'Field is missing or null',
+    };
+  }
+  const validRelevances = ['high', 'medium', 'low'];
+  if (!validRelevances.includes(result.relevance)) {
+    return {
+      valid: false,
+      error: `Matcher result "relevance" must be one of: ${validRelevances.join(', ')}`,
+      details: `Got: ${result.relevance}`,
     };
   }
 

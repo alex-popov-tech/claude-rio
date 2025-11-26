@@ -29,6 +29,20 @@ program
     }
   });
 
+program
+  .command('remove')
+  .description('Remove claude-rio from project or user installation')
+  .option('-u, --user', 'Remove from user level (~/.claude)')
+  .action(async (options) => {
+    try {
+      const removeCommand = require('./commands/remove');
+      await removeCommand(options);
+    } catch (error) {
+      console.error(chalk.red('Error:'), error.message);
+      process.exit(1);
+    }
+  });
+
 // Future commands can be added here:
 // program
 //   .command('add <skill-name>')
