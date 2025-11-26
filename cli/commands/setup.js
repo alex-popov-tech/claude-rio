@@ -163,7 +163,18 @@ async function generateMatchers(includeSkills, includeAgents, isUserLevel) {
   // Step 3: Build prompts for each skill/agent
   const skillPrompts = [];
   for (const item of filteredNeedMatchers) {
-    const matcherFilePath = path.join(item.path, 'rio', 'UserPromptSubmit.matcher.js');
+    // Different matcher paths for skills vs agents:
+    // - Skills (directories): <skill-dir>/rio/UserPromptSubmit.matcher.cjs
+    // - Agents (.md files): <agents-dir>/<agent-name>.rio.matcher.cjs (sibling to .md file)
+    let matcherFilePath;
+    if (item.type === 'agent') {
+      // Agent path is the .md file, matcher is sibling with .rio.matcher.cjs extension
+      matcherFilePath = item.path.replace(/\.md$/, '.rio.matcher.cjs');
+    } else {
+      // Skill path is the directory, matcher is in rio subdirectory
+      matcherFilePath = path.join(item.path, 'rio', 'UserPromptSubmit.matcher.cjs');
+    }
+
     const prompt = await buildPrompt({
       type: item.type, // Pass type (skill or agent)
       skillName: item.name,
@@ -179,56 +190,55 @@ async function generateMatchers(includeSkills, includeAgents, isUserLevel) {
     });
   }
 
-  // Step 4: Generate matchers in parallel with spinners
-  const spinners = {};
+  // Step 4: Generate matchers in parallel with single progress spinner
   const results = {
     created: [],
     failed: [],
-    timings: {},
+    completed: [], // Track completed items for summary
   };
 
-  // Create spinners for each skill/agent
-  for (const skillPrompt of skillPrompts) {
-    spinners[skillPrompt.skillName] = ora({
-      text: skillPrompt.skillName,
-      color: 'cyan',
-    }).start();
-    results.timings[skillPrompt.skillName] = Date.now();
-  }
+  const totalCount = skillPrompts.length;
+  let completedCount = 0;
+
+  // Single spinner showing progress
+  const spinner = ora({
+    text: `Generating matchers... (0/${totalCount})`,
+    color: 'cyan',
+  }).start();
 
   // Progress callback for each skill/agent
   const onProgress = async (skillName, result) => {
-    const spinner = spinners[skillName];
-    const elapsed = ((Date.now() - results.timings[skillName]) / 1000).toFixed(1);
+    completedCount++;
+    const skillPrompt = skillPrompts.find((sp) => sp.skillName === skillName);
 
     if (result.success) {
-      // Find the matcher file path
-      const skillPrompt = skillPrompts.find((sp) => sp.skillName === skillName);
-
       // Validate the generated matcher
       const validation = await validateMatcher(skillPrompt.matcherFilePath);
 
       if (validation.valid) {
-        spinner.succeed(`${skillName} ${chalk.dim(`(${elapsed}s)`)}`);
         results.created.push(skillPrompt.matcherFilePath);
+        results.completed.push({ name: skillName, success: true });
       } else {
-        spinner.fail(`${skillName} ${chalk.dim(`(${elapsed}s)`)}`);
         results.failed.push({
           skill: skillName,
           path: skillPrompt.matcherFilePath,
           error: validation.error,
           details: validation.details,
         });
+        results.completed.push({ name: skillName, success: false });
       }
     } else {
-      spinner.fail(`${skillName} ${chalk.dim(`(${elapsed}s)`)}`);
       results.failed.push({
         skill: skillName,
         error: result.error,
         stdout: result.stdout,
         stderr: result.stderr,
       });
+      results.completed.push({ name: skillName, success: false });
     }
+
+    // Update spinner text
+    spinner.text = `Generating matchers... (${completedCount}/${totalCount})`;
   };
 
   // Generate all matchers in parallel
@@ -238,12 +248,17 @@ async function generateMatchers(includeSkills, includeAgents, isUserLevel) {
     onProgress: onProgress,
   });
 
-  // Ensure all spinners are stopped before printing summary
-  Object.values(spinners).forEach((spinner) => {
-    if (spinner.isSpinning) {
-      spinner.stop();
+  // Stop spinner and show summary
+  spinner.stop();
+
+  // Print individual results
+  for (const item of results.completed) {
+    if (item.success) {
+      console.log(chalk.green(`  ✓ ${item.name}`));
+    } else {
+      console.log(chalk.red(`  ✗ ${item.name}`));
     }
-  });
+  }
 
   // Step 5: Display results summary
   const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);

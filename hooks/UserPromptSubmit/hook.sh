@@ -18,11 +18,26 @@ USER_SKILLS="${HOME}/.claude/skills"
 PROJECT_AGENTS="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/agents"
 USER_AGENTS="${HOME}/.claude/agents"
 
-# Find all UserPromptSubmit.matcher.js files in rio subdirectories
+# Find all matcher files
 # Using -L to follow symlinks (user skills/agents may be symlinked from dotfiles)
-# Using -path to ensure matchers are in rio namespace
-MATCHERS=$(find -L "$PROJECT_SKILLS" "$USER_SKILLS" "$PROJECT_AGENTS" "$USER_AGENTS" \
-  -type f -path "*/rio/UserPromptSubmit.matcher.js" -print 2>/dev/null || true)
+#
+# Skills and agents have different structures:
+# - Skills (subdirectories): .claude/skills/<skill>/rio/UserPromptSubmit.matcher.cjs
+# - Agents (.md files): .claude/agents/<agent>.rio.matcher.cjs (sibling to .md file)
+
+# Find skill matchers (in rio subdirectories)
+SKILL_MATCHERS=$(find -L "$PROJECT_SKILLS" "$USER_SKILLS" \
+  -type f -path "*/rio/UserPromptSubmit.matcher.cjs" -print 2>/dev/null || true)
+
+# Find agent matchers (directly in agents directory, named *.rio.matcher.cjs)
+AGENT_MATCHERS=$(find -L "$PROJECT_AGENTS" "$USER_AGENTS" \
+  -maxdepth 1 -type f -name "*.rio.matcher.cjs" -print 2>/dev/null || true)
+
+# Combine both sets of matchers
+MATCHERS="${SKILL_MATCHERS}
+${AGENT_MATCHERS}"
+# Remove empty lines
+MATCHERS=$(echo "$MATCHERS" | grep -v '^$' || true)
 
 # Early exit if no matchers found - no need to launch Node.js
 if [ -z "$MATCHERS" ]; then
