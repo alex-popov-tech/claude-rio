@@ -4,7 +4,6 @@
  */
 
 const path = require('path');
-const fs = require('fs-extra');
 const chalk = require('chalk');
 const ora = require('ora');
 const { copyTemplates, validateTargetDirectory } = require('../utils/copy-templates');
@@ -129,12 +128,10 @@ async function generateMatchers(includeSkills, includeAgents, isUserLevel) {
     console.log(chalk.yellow(`\n⊗ No ${typeLabel} found`));
     console.log(`\nCreate ${typeLabel} in:`);
     if (includeSkills) {
-      console.log(chalk.cyan(`  ${projectSkillsDir}`));
-      console.log(chalk.cyan(`  ${userSkillsDir}`));
+      console.log(chalk.cyan(`  ${skillsDir}`));
     }
     if (includeAgents) {
-      console.log(chalk.cyan(`  ${projectAgentsDir}`));
-      console.log(chalk.cyan(`  ${userAgentsDir}`));
+      console.log(chalk.cyan(`  ${agentsDir}`));
     }
     console.log();
     process.exit(0);

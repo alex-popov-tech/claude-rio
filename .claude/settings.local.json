@@ -28,7 +28,8 @@
       "Bash(npm run lint)",
       "Bash(npm run prepublishOnly:*)",
       "Skill(eslint-detector)",
-      "Skill(typescript-detector)"
+      "Skill(typescript-detector)",
+      "Bash(npm run format:check:*)"
     ],
     "deny": [],
     "ask": []

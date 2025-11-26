@@ -24,10 +24,6 @@ function formatActiveSkillsAsDirective(items) {
     return '';
   }
 
-  // Separate skills from agents
-  const skills = items.filter((item) => item.type === 'skill');
-  const agents = items.filter((item) => item.type === 'agent');
-
   // Group by priority
   const critical = items.filter((s) => s.priority === 'critical');
   const high = items.filter((s) => s.priority === 'high');
