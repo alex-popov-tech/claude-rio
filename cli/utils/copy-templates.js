@@ -24,9 +24,9 @@ async function copyTemplates(targetDir, options = {}) {
     const sourceRoot = path.join(__dirname, '..', '..');
     const hooksSource = path.join(sourceRoot, 'hooks');
 
-    // Determine target directories (add better-hooks namespace during install)
+    // Determine target directories (add rio namespace during install)
     const claudeDir = path.join(targetDir, '.claude');
-    const hooksTarget = path.join(claudeDir, 'hooks', 'better-hooks');
+    const hooksTarget = path.join(claudeDir, 'hooks', 'rio');
 
     // Create .claude directory structure
     await fs.ensureDir(hooksTarget);
@@ -106,7 +106,7 @@ async function makeScriptsExecutable(dir) {
 
 /**
  * Create or merge settings.json with OS-appropriate hook commands.
- * Integrates better-hooks into existing Claude Code setup without overwriting user's existing hooks.
+ * Integrates claude-rio into existing Claude Code setup without overwriting user's existing hooks.
  *
  * @param {string} claudeDir - .claude directory path
  * @param {boolean} isUserLevel - Whether this is a user-level installation
@@ -123,10 +123,10 @@ async function createSettingsJson(claudeDir, isUserLevel = false) {
   const pathVar = isUserLevel ? '$HOME' : '$CLAUDE_PROJECT_DIR';
 
   // Our hook commands to add
-  const betterHooksCommands = {
+  const rioCommands = {
     UserPromptSubmit: {
       type: 'command',
-      command: `${shellCommand} ${pathVar}/.claude/hooks/better-hooks/UserPromptSubmit/hook.${hookExt}`,
+      command: `${shellCommand} ${pathVar}/.claude/hooks/rio/UserPromptSubmit/hook.${hookExt}`,
     },
   };
 
@@ -148,8 +148,8 @@ async function createSettingsJson(claudeDir, isUserLevel = false) {
     }
   }
 
-  // Merge better-hooks into existing hooks for each hook type
-  for (const [hookType, hookCommand] of Object.entries(betterHooksCommands)) {
+  // Merge rio into existing hooks for each hook type
+  for (const [hookType, hookCommand] of Object.entries(rioCommands)) {
     // Ensure the hook type array exists
     if (!settings.hooks[hookType]) {
       settings.hooks[hookType] = [];
@@ -160,7 +160,7 @@ async function createSettingsJson(claudeDir, isUserLevel = false) {
       if (!hookGroup.hooks || !Array.isArray(hookGroup.hooks)) return false;
 
       return hookGroup.hooks.some(
-        (hook) => hook.command && hook.command.includes('.claude/hooks/better-hooks/' + hookType)
+        (hook) => hook.command && hook.command.includes('.claude/hooks/rio/' + hookType)
       );
     });
 

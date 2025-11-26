@@ -1,7 +1,7 @@
-# ⚠️  DO NOT EDIT - Managed by better-hooks
+# ⚠️  DO NOT EDIT - Managed by claude-rio
 #
-# This file is installed and maintained by better-hooks.
-# Manual changes will be lost when better-hooks is updated.
+# This file is installed and maintained by claude-rio.
+# Manual changes will be lost when claude-rio is updated.
 #
 # To customize behavior, create skills in .claude/skills/
 # See: .claude/docs/CREATING_SKILLS.md

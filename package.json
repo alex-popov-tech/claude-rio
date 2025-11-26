@@ -1,7 +1,7 @@
 {
-  "name": "better-hooks",
-  "version": "0.3.0",
-  "description": "Skill-based hooks system for Claude Code CLI with two-tier architecture for optimal performance",
+  "name": "claude-rio",
+  "version": "1.0.0",
+  "description": "Make Claude Code suggest the right skills and agents at the right time - automatically activate your custom workflows when they're most relevant",
   "keywords": [
     "claude",
     "claude-code",
@@ -11,19 +11,19 @@
     "skills",
     "automation"
   ],
-  "homepage": "https://github.com/yourusername/better-hooks#readme",
+  "homepage": "https://github.com/alex-popov-tech/claude-rio#readme",
   "bugs": {
-    "url": "https://github.com/yourusername/better-hooks/issues"
+    "url": "https://github.com/alex-popov-tech/claude-rio/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/better-hooks.git"
+    "url": "git+https://github.com/alex-popov-tech/claude-rio.git"
   },
   "license": "MIT",
-  "author": "Your Name <your.email@example.com>",
+  "author": "Oleksandr Popov <alex.popov.tech@gmail.com>",
   "main": "cli/index.js",
   "bin": {
-    "better-hooks": "./cli/index.js"
+    "claude-rio": "./cli/index.js"
   },
   "files": [
     "cli/",
@@ -35,8 +35,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "echo 'Tests not yet implemented' && exit 0",
-    "test:integration": "bash test/integration/test-init.sh",
+    "test": "npm run test:haiku && npm run test:docker",
+    "test:haiku": "node tests/haiku-visual/run.js",
+    "test:haiku:dry": "node tests/haiku-visual/run.js --dry-run",
+    "test:docker": "bash tests/docker/run-all.sh",
     "dev": "node cli/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

@@ -11,7 +11,7 @@ const fs = require('fs');
  * @returns {string} Path to matchers/UserPromptSubmit.matcher.js
  */
 function getMatcherTemplatePath() {
-  // Assume better-hooks is installed as a package
+  // Assume claude-rio is installed as a package
   // Go up from cli/utils/ to package root
   return path.join(__dirname, '..', '..', 'matchers', 'UserPromptSubmit.matcher.js');
 }

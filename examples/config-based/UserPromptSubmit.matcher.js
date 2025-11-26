@@ -60,7 +60,7 @@ module.exports = function (context) {
 
   try {
     // Configuration file location (customize to your preference)
-    const configPath = path.join(context.cwd, '.better-hooks-config.json');
+    const configPath = path.join(context.cwd, '.claude-rio-config.json');
 
     if (fs.existsSync(configPath)) {
       const fileContent = fs.readFileSync(configPath, 'utf8');
@@ -142,7 +142,7 @@ module.exports = function (context) {
  *
  * CONFIGURATION FILE FORMATS:
  *
- * LOCATION 1: Project-specific config (.better-hooks-config.json in project root)
+ * LOCATION 1: Project-specific config (.claude-rio-config.json in project root)
  * {
  *   "skills": {
  *     "docker-helper": {
@@ -181,11 +181,11 @@ module.exports = function (context) {
  *     }
  *   }
  *
- * LOCATION 3: User-level config (~/.better-hooks-config.json)
+ * LOCATION 3: User-level config (~/.claude-rio-config.json)
  * Apply to all projects for this user:
- *   const userConfigPath = path.join(require('os').homedir(), '.better-hooks-config.json');
+ *   const userConfigPath = path.join(require('os').homedir(), '.claude-rio-config.json');
  *
- * LOCATION 4: Skill-specific config (.claude/skills/my-skill/better-hooks/config.json)
+ * LOCATION 4: Skill-specific config (.claude/skills/my-skill/rio/config.json)
  * Isolated per skill, more granular control
  *
  * CONFIGURATION SCHEMA OPTIONS:
@@ -320,7 +320,7 @@ module.exports = function (context) {
  *
  * EXAMPLE 1: Team-Specific Terminology
  * Team A calls their database "datastore", Team B calls it "database".
- * Each project has .better-hooks-config.json with appropriate keywords.
+ * Each project has .claude-rio-config.json with appropriate keywords.
  *
  * EXAMPLE 2: Strict vs Relaxed Projects
  * Strict projects: linter is "critical" priority

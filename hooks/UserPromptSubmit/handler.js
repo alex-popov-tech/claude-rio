@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * ⚠️  DO NOT EDIT - Managed by better-hooks
+ * ⚠️  DO NOT EDIT - Managed by claude-rio
  *
- * This file is installed and maintained by better-hooks.
- * Manual changes will be lost when better-hooks is updated.
+ * This file is installed and maintained by claude-rio.
+ * Manual changes will be lost when claude-rio is updated.
  *
  * To customize behavior, create skills in .claude/skills/
  * See: .claude/docs/CREATING_SKILLS.md
@@ -54,12 +54,12 @@ async function main() {
     .filter((p) => p.length > 0);
 
   // Build matcher file info from paths
-  // Path structure: .../skills/<name>/better-hooks/UserPromptSubmit.matcher.js
+  // Path structure: .../skills/<name>/rio/UserPromptSubmit.matcher.js
   // We need to extract <name> by going up two directories from the matcher file
   // Type is detected from the path (.claude/skills/ vs .claude/agents/)
   const matcherFiles = matcherPaths.map((matcherPath) => {
-    const betterHooksDir = path.dirname(matcherPath); // .../name/better-hooks
-    const itemDir = path.dirname(betterHooksDir); // .../name
+    const rioDir = path.dirname(matcherPath); // .../name/rio
+    const itemDir = path.dirname(rioDir); // .../name
     const name = path.basename(itemDir); // name
     const isAgent =
       matcherPath.includes('/.claude/agents/') || matcherPath.includes('\\.claude\\agents\\');

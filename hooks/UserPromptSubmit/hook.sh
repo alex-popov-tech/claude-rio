@@ -1,8 +1,8 @@
 #!/bin/bash
-# ⚠️  DO NOT EDIT - Managed by better-hooks
+# ⚠️  DO NOT EDIT - Managed by claude-rio
 #
-# This file is installed and maintained by better-hooks.
-# Manual changes will be lost when better-hooks is updated.
+# This file is installed and maintained by claude-rio.
+# Manual changes will be lost when claude-rio is updated.
 #
 # To customize behavior, create skills in .claude/skills/
 # See: .claude/docs/CREATING_SKILLS.md
@@ -18,11 +18,11 @@ USER_SKILLS="${HOME}/.claude/skills"
 PROJECT_AGENTS="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/agents"
 USER_AGENTS="${HOME}/.claude/agents"
 
-# Find all UserPromptSubmit.matcher.js files in better-hooks subdirectories
+# Find all UserPromptSubmit.matcher.js files in rio subdirectories
 # Using -L to follow symlinks (user skills/agents may be symlinked from dotfiles)
-# Using -path to ensure matchers are in better-hooks namespace
+# Using -path to ensure matchers are in rio namespace
 MATCHERS=$(find -L "$PROJECT_SKILLS" "$USER_SKILLS" "$PROJECT_AGENTS" "$USER_AGENTS" \
-  -type f -path "*/better-hooks/UserPromptSubmit.matcher.js" -print 2>/dev/null || true)
+  -type f -path "*/rio/UserPromptSubmit.matcher.js" -print 2>/dev/null || true)
 
 # Early exit if no matchers found - no need to launch Node.js
 if [ -z "$MATCHERS" ]; then

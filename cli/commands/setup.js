@@ -1,5 +1,5 @@
 /**
- * Setup command - Setup or update better-hooks in the current project.
+ * Setup command - Setup or update claude-rio in the current project.
  * Idempotent - safe to run multiple times to update to latest version.
  */
 
@@ -16,7 +16,7 @@ const { generateMatchers: generateMatchersUtil } = require('../utils/claude-gene
 const { validateMatcher } = require('../utils/matcher-validator');
 
 /**
- * Install the better-hooks framework
+ * Install the claude-rio framework
  *
  * @param {boolean} isUserLevel - Install at user level (~/) instead of project level
  * @returns {Promise<void>}
@@ -24,7 +24,7 @@ const { validateMatcher } = require('../utils/matcher-validator');
 async function installFramework(isUserLevel) {
   const installationType = isUserLevel ? 'user-level' : 'project-level';
 
-  console.log(chalk.blue.bold(`🚀 Setting up better-hooks (${installationType})...\n`));
+  console.log(chalk.blue.bold(`🚀 Setting up claude-rio (${installationType})...\n`));
 
   // Determine target directory based on installation type
   const targetDir = isUserLevel ? require('os').homedir() : process.cwd();
@@ -49,7 +49,7 @@ async function installFramework(isUserLevel) {
 
   // Success message
   const claudePath = isUserLevel ? '~/.claude' : '.claude';
-  console.log(chalk.green.bold(`✅ better-hooks installed successfully!\n`));
+  console.log(chalk.green.bold(`✅ claude-rio installed successfully!\n`));
 
   console.log(chalk.bold('What was installed:'));
   console.log(`  ✓ Hook system in ${chalk.cyan(claudePath + '/hooks/')}`);
@@ -58,7 +58,7 @@ async function installFramework(isUserLevel) {
   console.log(chalk.bold('Next steps:'));
   console.log(`  1. Create skills in ${chalk.cyan(claudePath + '/skills/')}`);
   console.log(`  2. Add matchers to activate skills automatically`);
-  console.log(`  3. See ${chalk.cyan('https://github.com/yourusername/better-hooks')} for docs\n`);
+  console.log(`  3. See ${chalk.cyan('https://github.com/alex-popov-tech/claude-rio')} for docs\n`);
 
   if (isUserLevel) {
     console.log(chalk.dim('Note: User-level hooks are active for all your projects.'));
@@ -72,9 +72,10 @@ async function installFramework(isUserLevel) {
  *
  * @param {boolean} includeSkills - Generate matchers for skills
  * @param {boolean} includeAgents - Generate matchers for agents
+ * @param {boolean} isUserLevel - Generate matchers at user level (~/.) instead of project level
  * @returns {Promise<void>}
  */
-async function generateMatchers(includeSkills, includeAgents) {
+async function generateMatchers(includeSkills, includeAgents, isUserLevel) {
   const startTime = Date.now();
 
   // Determine type label for messaging
@@ -93,23 +94,20 @@ async function generateMatchers(includeSkills, includeAgents) {
   }
   console.log(chalk.green('✓ Claude CLI found\n'));
 
-  // Step 2: Scan for skills and agents in both project and user directories
-  const projectSkillsDir = getSkillsDir(process.cwd());
-  const userSkillsDir = getSkillsDir(require('os').homedir());
-  const projectAgentsDir = getAgentsDir(process.cwd());
-  const userAgentsDir = getAgentsDir(require('os').homedir());
+  // Step 2: Scan for skills and agents in the appropriate scope
+  const baseDir = isUserLevel ? require('os').homedir() : process.cwd();
+  const skillsDir = getSkillsDir(baseDir);
+  const agentsDir = getAgentsDir(baseDir);
 
-  console.log(chalk.dim(`Scanning:`));
+  console.log(chalk.dim(`Scanning ${isUserLevel ? 'user-level' : 'project-level'}:`));
   if (includeSkills) {
-    console.log(chalk.dim(`  Skills (project): ${projectSkillsDir}`));
-    console.log(chalk.dim(`  Skills (user): ${userSkillsDir}`));
+    console.log(chalk.dim(`  Skills: ${skillsDir}`));
   }
   if (includeAgents) {
-    console.log(chalk.dim(`  Agents (project): ${projectAgentsDir}`));
-    console.log(chalk.dim(`  Agents (user): ${userAgentsDir}`));
+    console.log(chalk.dim(`  Agents: ${agentsDir}`));
   }
 
-  const { needMatchers, haveMatchers } = await scanSkills();
+  const { needMatchers, haveMatchers } = await scanSkills(baseDir);
 
   // Filter by requested types
   let filteredNeedMatchers = needMatchers;
@@ -168,7 +166,7 @@ async function generateMatchers(includeSkills, includeAgents) {
   // Step 3: Build prompts for each skill/agent
   const skillPrompts = [];
   for (const item of filteredNeedMatchers) {
-    const matcherFilePath = path.join(item.path, 'better-hooks', 'UserPromptSubmit.matcher.js');
+    const matcherFilePath = path.join(item.path, 'rio', 'UserPromptSubmit.matcher.js');
     const prompt = await buildPrompt({
       type: item.type, // Pass type (skill or agent)
       skillName: item.name,
@@ -285,7 +283,7 @@ async function generateMatchers(includeSkills, includeAgents) {
     });
     console.log();
     console.log(chalk.dim('For help creating matchers manually, see:'));
-    console.log(chalk.cyan('  https://github.com/yourusername/better-hooks#creating-matchers\n'));
+    console.log(chalk.cyan('  https://github.com/alex-popov-tech/claude-rio#creating-matchers\n'));
 
     process.exit(1);
   }
@@ -301,11 +299,12 @@ async function generateMatchers(includeSkills, includeAgents) {
  * @returns {Promise<void>}
  */
 async function setupCommand(options) {
-  const shouldInstallFramework = (!options.skills && !options.agents) || options.user;
+  const isUserLevel = options.user || false;
+  const shouldInstallFramework = (!options.skills && !options.agents) || isUserLevel;
   const shouldGenerateMatchers = options.skills || options.agents;
 
   if (shouldInstallFramework) {
-    await installFramework(options.user || false);
+    await installFramework(isUserLevel);
   }
 
   // Add visual separator between operations
@@ -314,7 +313,7 @@ async function setupCommand(options) {
   }
 
   if (shouldGenerateMatchers) {
-    await generateMatchers(options.skills || false, options.agents || false);
+    await generateMatchers(options.skills || false, options.agents || false, isUserLevel);
   }
 }
 
