@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Purpose
 
-better-hooks is a hook framework for Claude Code CLI that improves skill and agent activation through deterministic keyword matching. It provides explicit suggestions to Claude about relevant skills/agents based on user prompts, significantly increasing activation probability.
+claude-rio is a hook framework for Claude Code CLI that improves skill and agent activation through deterministic keyword matching. It provides explicit suggestions to Claude about relevant skills/agents based on user prompts, significantly increasing activation probability.
 
 ## Technology Stack
 
@@ -17,7 +17,7 @@ better-hooks is a hook framework for Claude Code CLI that improves skill and age
 ## Project Structure
 
 ```
-better-hooks/
+claude-rio/
 ├── cli/                           # Command-line interface
 │   ├── index.js                   # Main CLI entry point
 │   ├── commands/                  # CLI commands (setup)
@@ -50,7 +50,7 @@ The system uses a **shell-first approach** to minimize overhead:
 
 1. **Shell wrapper (`hook.sh`)** runs first
    - Uses `find` command to locate matcher files
-   - Searches `.claude/skills/*/better-hooks/` and `.claude/agents/*/better-hooks/`
+   - Searches `.claude/skills/*/rio/` and `.claude/agents/*/rio/`
    - If no matchers found → exits immediately (~10-20ms)
    - If matchers found → passes paths to Node.js via `MATCHER_PATHS` env var
 
@@ -67,7 +67,7 @@ The system uses a **shell-first approach** to minimize overhead:
 
 Matchers are JavaScript functions that determine skill/agent relevance:
 
-- **Location:** `.claude/skills/<name>/better-hooks/UserPromptSubmit.matcher.js` or `.claude/agents/<name>/better-hooks/UserPromptSubmit.matcher.js`
+- **Location:** `.claude/skills/<name>/rio/UserPromptSubmit.matcher.js` or `.claude/agents/<name>/rio/UserPromptSubmit.matcher.js`
 - **Input:** Context object with `{prompt, cwd, transcriptPath, sessionId, permissionMode, meta, transcript}`
 - **Output:** `{version: "1.0", relevant: boolean, priority: string, relevance: string}`
 - **Validation:** All fields are MANDATORY (no undefined/null allowed)
@@ -126,10 +126,10 @@ node cli/index.js setup
 node cli/index.js setup --skills --agents
 
 # As installed package
-npx better-hooks setup
-npx better-hooks setup --user
-npx better-hooks setup --skills --agents
-npx better-hooks setup --user --skills --agents
+npx claude-rio setup
+npx claude-rio setup --user
+npx claude-rio setup --skills --agents
+npx claude-rio setup --user --skills --agents
 ```
 
 ### Testing Hook Discovery

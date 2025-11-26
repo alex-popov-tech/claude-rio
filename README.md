@@ -1,13 +1,13 @@
-# better-hooks
+# claude-rio
 
 **Deterministic matcher system for Claude Code that significantly improves skill and agent activation.**
 
-[![npm version](https://img.shields.io/npm/v/better-hooks.svg)](https://www.npmjs.com/package/better-hooks)
+[![npm version](https://img.shields.io/npm/v/claude-rio.svg)](https://www.npmjs.com/package/claude-rio)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## What is better-hooks?
+## What is claude-rio?
 
-better-hooks adds keyword-based matching to [Claude Code](https://claude.ai/code) skills and agents, significantly increasing the probability that Claude will activate them when relevant.
+claude-rio adds keyword-based matching to [Claude Code](https://claude.ai/code) skills and agents, significantly increasing the probability that Claude will activate them when relevant.
 
 ### The Problem
 
@@ -18,12 +18,12 @@ Claude Code auto-discovers skills and agents but doesn't consistently activate t
 
 ### The Solution
 
-better-hooks provides explicit activation suggestions based on keyword matching:
+claude-rio provides explicit activation suggestions based on keyword matching:
 - Keywords match → Claude sees "SUGGESTED: typescript-compiler (Skill tool)"
 - **Claude still makes the final decision**, but with better awareness
 - Significantly increases activation probability without guaranteeing it
 
-**Important:** better-hooks improves activation by making Claude aware of relevant skills/agents. However, Claude makes the final decision on whether to use them. Activation depends on prompt clarity, skill relevance, and Claude's reasoning.
+**Important:** claude-rio improves activation by making Claude aware of relevant skills/agents. However, Claude makes the final decision on whether to use them. Activation depends on prompt clarity, skill relevance, and Claude's reasoning.
 
 ## Key Features
 
@@ -38,20 +38,20 @@ better-hooks provides explicit activation suggestions based on keyword matching:
 
 ```bash
 # Install the hook framework
-npx better-hooks setup
+npx claude-rio setup
 
 # Auto-generate matchers for existing skills/agents
-npx better-hooks setup --skills --agents
+npx claude-rio setup --skills --agents
 
 # Or do everything at once
-npx better-hooks setup --user --skills --agents
+npx claude-rio setup --user --skills --agents
 ```
 
-That's it! better-hooks integrates with your `.claude/settings.json` automatically.
+That's it! claude-rio integrates with your `.claude/settings.json` automatically.
 
 ## How It Works
 
-When you submit a prompt, better-hooks:
+When you submit a prompt, claude-rio:
 1. Checks for matcher files in your skills and agents
 2. Runs matchers to determine relevance
 3. Suggests relevant skills/agents to Claude
@@ -70,7 +70,7 @@ Matchers are simple JavaScript functions that return whether a skill/agent is re
 ### Example: Skill Matcher
 
 ```javascript
-// .claude/skills/docker-helper/better-hooks/UserPromptSubmit.matcher.js
+// .claude/skills/docker-helper/rio/UserPromptSubmit.matcher.js
 module.exports = function (context) {
   const prompt = context.prompt.toLowerCase();
   const keywords = ['docker', 'container', 'dockerfile'];
@@ -90,7 +90,7 @@ module.exports = function (context) {
 ### Example: Agent Matcher
 
 ```javascript
-// .claude/agents/code-reviewer/better-hooks/UserPromptSubmit.matcher.js
+// .claude/agents/code-reviewer/rio/UserPromptSubmit.matcher.js
 module.exports = function (context) {
   const prompt = context.prompt.toLowerCase();
 
@@ -113,7 +113,7 @@ module.exports = function (context) {
 
 ## Examples
 
-better-hooks includes 5 example matcher patterns in `examples/`:
+claude-rio includes 5 example matcher patterns in `examples/`:
 
 1. **keyword** - Simple keyword matching (fastest, most common)
 2. **typo-tolerant** - Handles misspellings and variations
@@ -123,24 +123,24 @@ better-hooks includes 5 example matcher patterns in `examples/`:
 
 View examples:
 ```bash
-# After installing better-hooks
-node_modules/better-hooks/examples/keyword/UserPromptSubmit.matcher.js
+# After installing claude-rio
+node_modules/claude-rio/examples/keyword/UserPromptSubmit.matcher.js
 ```
 
-Or browse on [GitHub](https://github.com/yourusername/better-hooks/tree/main/examples).
+Or browse on [GitHub](https://github.com/alex-popov-tech/claude-rio/tree/main/examples).
 
 ## Installation
 
 ### Project-level (recommended)
 ```bash
-npx better-hooks setup
+npx claude-rio setup
 ```
 
 Installs to `./.claude/` - hooks active only for this project.
 
 ### User-level
 ```bash
-npx better-hooks setup --user
+npx claude-rio setup --user
 ```
 
 Installs to `~/.claude/` - hooks active for all your projects.
@@ -151,13 +151,13 @@ If you already have skills or agents without matchers, use:
 
 ```bash
 # Generate matchers for skills only
-npx better-hooks setup --skills
+npx claude-rio setup --skills
 
 # Generate matchers for agents only
-npx better-hooks setup --agents
+npx claude-rio setup --agents
 
 # Generate matchers for both
-npx better-hooks setup --skills --agents
+npx claude-rio setup --skills --agents
 ```
 
 This command:
@@ -169,7 +169,7 @@ This command:
 
 ### `setup` - Setup framework and generate matchers
 
-**Usage:** `better-hooks setup [options]`
+**Usage:** `claude-rio setup [options]`
 
 **Options:**
 - `-u, --user` - Install at user level (~/.claude)
@@ -179,21 +179,21 @@ This command:
 **Examples:**
 ```bash
 # Framework installation
-better-hooks setup              # Install to ./.claude
-better-hooks setup --user       # Install to ~/.claude
+claude-rio setup              # Install to ./.claude
+claude-rio setup --user       # Install to ~/.claude
 
 # Matcher generation
-better-hooks setup --skills           # Skills only
-better-hooks setup --agents           # Agents only
-better-hooks setup --skills --agents  # Both
+claude-rio setup --skills           # Skills only
+claude-rio setup --agents           # Agents only
+claude-rio setup --skills --agents  # Both
 
 # Combined operations
-better-hooks setup --user --skills --agents  # Install + generate all
+claude-rio setup --user --skills --agents  # Install + generate all
 ```
 
 ## Integration
 
-better-hooks merges seamlessly with existing Claude Code setups:
+claude-rio merges seamlessly with existing Claude Code setups:
 
 ```json
 // Before
@@ -205,12 +205,12 @@ better-hooks merges seamlessly with existing Claude Code setups:
   }
 }
 
-// After better-hooks setup
+// After claude-rio setup
 {
   "hooks": {
     "UserPromptSubmit": [
       {"hooks": [{"command": "your-existing-hook"}]},
-      {"hooks": [{"command": "bash .claude/hooks/better-hooks/UserPromptSubmit/hook.sh"}]}
+      {"hooks": [{"command": "bash .claude/hooks/rio/UserPromptSubmit/hook.sh"}]}
     ]
   }
 }
@@ -224,8 +224,8 @@ better-hooks merges seamlessly with existing Claude Code setups:
 
 ## Documentation
 
-- [Examples](https://github.com/yourusername/better-hooks/tree/main/examples) - Working matcher examples
-- [GitHub Repository](https://github.com/yourusername/better-hooks) - Source code and issues
+- [Examples](https://github.com/alex-popov-tech/claude-rio/tree/main/examples) - Working matcher examples
+- [GitHub Repository](https://github.com/alex-popov-tech/claude-rio) - Source code and issues
 - [Claude Code Docs](https://claude.ai/code) - Official Claude Code documentation
 
 ## Performance
