@@ -33,6 +33,8 @@ program
   .command('remove')
   .description('Remove claude-rio from project or user installation')
   .option('-u, --user', 'Remove from user level (~/.claude)')
+  .option('-s, --skills', 'Remove matchers for skills')
+  .option('-a, --agents', 'Remove matchers for agents')
   .action(async (options) => {
     try {
       const removeCommand = require('./commands/remove');

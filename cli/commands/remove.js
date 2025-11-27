@@ -123,7 +123,14 @@ async function cleanupSettings(targetDir) {
     // Filter out rio hook entries
     const originalLength = settings.hooks.UserPromptSubmit.length;
     settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit.filter(
-      (hook) => !hook.path || !hook.path.includes('/hooks/rio/')
+      (hookGroup) => {
+        if (!hookGroup.hooks || !Array.isArray(hookGroup.hooks)) return true;
+
+        // Remove hookGroup if ANY hook inside it matches rio
+        return !hookGroup.hooks.some(
+          (hook) => hook.command && hook.command.includes('.claude/hooks/rio/')
+        );
+      }
     );
 
     const newLength = settings.hooks.UserPromptSubmit.length;
@@ -158,10 +165,14 @@ async function cleanupSettings(targetDir) {
  *
  * @param {Object} options - Command options
  * @param {boolean} [options.user] - Remove from user level (~/.claude)
+ * @param {boolean} [options.skills] - Remove matchers for skills
+ * @param {boolean} [options.agents] - Remove matchers for agents
  * @returns {Promise<void>}
  */
 async function removeCommand(options) {
   const isUserLevel = options.user || false;
+  const removeSkills = options.skills || false;
+  const removeAgents = options.agents || false;
   const targetDir = isUserLevel ? require('os').homedir() : process.cwd();
   const installationType = isUserLevel ? 'user-level' : 'project-level';
 
@@ -176,25 +187,29 @@ async function removeCommand(options) {
     settings: false,
   };
 
-  // 1. Remove hooks directory
+  // 1. Remove hooks directory (always)
   removed.hooks = await removeHooksDirectory(targetDir);
   if (removed.hooks) {
     console.log(chalk.green('✓ Removed hooks directory'));
   }
 
-  // 2. Remove skill matchers
-  removed.skillMatchers = await removeSkillMatchers(targetDir);
-  if (removed.skillMatchers > 0) {
-    console.log(chalk.green(`✓ Removed ${removed.skillMatchers} skill matcher(s)`));
+  // 2. Remove skill matchers (only if --skills flag is set)
+  if (removeSkills) {
+    removed.skillMatchers = await removeSkillMatchers(targetDir);
+    if (removed.skillMatchers > 0) {
+      console.log(chalk.green(`✓ Removed ${removed.skillMatchers} skill matcher(s)`));
+    }
   }
 
-  // 3. Remove agent matchers
-  removed.agentMatchers = await removeAgentMatchers(targetDir);
-  if (removed.agentMatchers > 0) {
-    console.log(chalk.green(`✓ Removed ${removed.agentMatchers} agent matcher(s)`));
+  // 3. Remove agent matchers (only if --agents flag is set)
+  if (removeAgents) {
+    removed.agentMatchers = await removeAgentMatchers(targetDir);
+    if (removed.agentMatchers > 0) {
+      console.log(chalk.green(`✓ Removed ${removed.agentMatchers} agent matcher(s)`));
+    }
   }
 
-  // 4. Clean up settings.json
+  // 4. Clean up settings.json (always)
   removed.settings = await cleanupSettings(targetDir);
   if (removed.settings) {
     console.log(chalk.green('✓ Cleaned up settings.json'));
@@ -224,6 +239,18 @@ async function removeCommand(options) {
     }
 
     console.log();
+
+    // Show what was kept (if applicable)
+    if (!removeSkills || !removeAgents) {
+      const kept = [];
+      if (!removeSkills) kept.push('skill matchers');
+      if (!removeAgents) kept.push('agent matchers');
+
+      if (kept.length > 0) {
+        console.log(chalk.dim('Kept: ' + kept.join(', ')));
+        console.log(chalk.dim(`Use --skills or --agents flags to remove them.\n`));
+      }
+    }
   } else {
     console.log(chalk.yellow('⊗ No claude-rio installation found\n'));
     console.log('Nothing to remove.\n');
