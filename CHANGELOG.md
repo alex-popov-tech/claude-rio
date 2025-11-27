@@ -5,6 +5,13 @@ All notable changes to claude-rio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2025-11-28
+
+### Changed
+
+- **Handler output cleanup**: Removed unnecessary logging from handler.cjs to ensure only JSON is printed to stdout, improving compatibility with hook consumers
+- **Code formatting**: Applied consistent formatting across codebase
+
 ## [1.1.2] - 2025-11-27
 
 ### Changed
@@ -95,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Matcher validation (CLI and runtime)
 - Universal matcher template for easy customization
 
+[1.1.3]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.3
 [1.1.2]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.2
 [1.1.1]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.1
 [1.1.0]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.0
