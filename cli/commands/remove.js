@@ -122,16 +122,14 @@ async function cleanupSettings(targetDir) {
 
     // Filter out rio hook entries
     const originalLength = settings.hooks.UserPromptSubmit.length;
-    settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit.filter(
-      (hookGroup) => {
-        if (!hookGroup.hooks || !Array.isArray(hookGroup.hooks)) return true;
+    settings.hooks.UserPromptSubmit = settings.hooks.UserPromptSubmit.filter((hookGroup) => {
+      if (!hookGroup.hooks || !Array.isArray(hookGroup.hooks)) return true;
 
-        // Remove hookGroup if ANY hook inside it matches rio
-        return !hookGroup.hooks.some(
-          (hook) => hook.command && hook.command.includes('.claude/hooks/rio/')
-        );
-      }
-    );
+      // Remove hookGroup if ANY hook inside it matches rio
+      return !hookGroup.hooks.some(
+        (hook) => hook.command && hook.command.includes('.claude/hooks/rio/')
+      );
+    });
 
     const newLength = settings.hooks.UserPromptSubmit.length;
 
