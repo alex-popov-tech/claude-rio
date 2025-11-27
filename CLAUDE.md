@@ -25,10 +25,10 @@ claude-rio/
 ├── hooks/                         # Hook framework (distributed)
 │   └── UserPromptSubmit/
 │       ├── hook.sh                # Shell wrapper (finds matchers)
-│       ├── handler.js             # Node.js handler (executes matchers)
-│       ├── types.js               # JSDoc type definitions
-│       ├── validations.js         # Payload and result validation (inlined)
-│       └── formatter.js           # Output formatting
+│       ├── handler.cjs            # Node.js handler (executes matchers)
+│       ├── types.cjs              # JSDoc type definitions
+│       ├── validations.cjs        # Payload and result validation (inlined)
+│       └── formatter.cjs          # Output formatting
 ├── matchers/                      # Universal matcher template
 │   └── UserPromptSubmit.rio.matcher.cjs
 ├── examples/                      # Example matcher patterns
@@ -55,7 +55,7 @@ The system uses a **shell-first approach** to minimize overhead:
    - If no matchers found → exits immediately (~10-20ms)
    - If matchers found → passes paths to Node.js via `MATCHER_PATHS` env var
 
-2. **Node.js handler (`handler.js`)** only executes when matchers exist
+2. **Node.js handler (`handler.cjs`)** only executes when matchers exist
    - Reads matcher paths from environment
    - Loads and executes each matcher function
    - Validates matcher results
@@ -157,8 +157,8 @@ bash hooks/UserPromptSubmit/hook.sh < test-payloads/user-prompt-submit.json
 
 1. Create directory: `hooks/<HookEventName>/`
 2. Create `hook.sh` (shell wrapper with matcher discovery)
-3. Create `handler.js` (Node.js matcher executor)
-4. Create `types.js`, `validations.js`, `formatter.js`
+3. Create `handler.cjs` (Node.js matcher executor)
+4. Create `types.cjs`, `validations.cjs`, `formatter.cjs`
 5. Update `.claude/settings.json` with hook configuration
 
 Follow the pattern established by `UserPromptSubmit/`.
@@ -169,7 +169,7 @@ Follow the pattern established by `UserPromptSubmit/`.
 - **Validation is strict:** Both CLI and runtime validation enforce all fields
 - **Shell wrappers are OS-specific:** `.sh` for Unix, `.ps1` for Windows
 - **Template references:** CLI uses `matchers/UserPromptSubmit.rio.matcher.cjs` as template
-- **CommonJS extension:** Matchers use `.cjs` extension to ensure CommonJS compatibility regardless of host project's `package.json` "type" setting
+- **CommonJS extension:** All hook files (`.cjs`) and matchers (`.rio.matcher.cjs`) use the `.cjs` extension to ensure CommonJS compatibility regardless of host project's `package.json` "type" setting. This prevents ES module errors when hooks are installed in projects with `"type": "module"`.
 - **Auto-generation:** `setup --skills --agents` uses Claude Haiku for fast, cost-effective generation
 
 ## Reference Files
