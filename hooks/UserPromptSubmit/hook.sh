@@ -47,4 +47,4 @@ fi
 # Pass matcher paths via environment variable to Node.js handler
 # Node.js will read JSON payload from stdin as before
 export MATCHER_PATHS="$MATCHERS"
-exec node "$HOOK_DIR/handler.js"
+exec node "$HOOK_DIR/handler.cjs"
