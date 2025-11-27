@@ -30,7 +30,9 @@
       "Skill(eslint-detector)",
       "Skill(typescript-detector)",
       "Bash(npm run format:check:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

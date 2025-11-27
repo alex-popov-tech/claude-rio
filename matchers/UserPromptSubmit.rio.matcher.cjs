@@ -34,5 +34,6 @@ module.exports = function (context) {
     relevant: hasKeyword, // Required: true or false
     priority: hasKeyword ? 'medium' : 'low', // Required: "critical" | "high" | "medium" | "low"
     relevance: hasKeyword ? 'high' : 'low', // Required: "high" | "medium" | "low"
+    type: 'skill', // TODO: Haiku sets to 'skill' or 'agent' based on context
   };
 };

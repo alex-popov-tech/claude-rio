@@ -5,6 +5,14 @@ All notable changes to claude-rio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-11-27
+
+### Fixed
+
+- **Matcher template**: Added missing `type` field to matcher return object in universal template
+- **Prompt builder**: Updated both skill and agent prompts to instruct Claude to include `type` field when generating matchers
+- This ensures auto-generated matchers on user machines include the `type` property, making skill/agent invocation instructions more explicit
+
 ## [1.1.0] - 2025-11-27
 
 ### Changed
@@ -69,5 +77,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Matcher validation (CLI and runtime)
 - Universal matcher template for easy customization
 
+[1.1.1]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.1
 [1.1.0]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.0
 [1.0.0]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.0.0

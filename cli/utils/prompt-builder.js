@@ -70,7 +70,8 @@ For a Git skill: ['git', 'commit', 'branch', 'merge', 'push']
 
 ## IMPORTANT
 
-- ALL return fields are MANDATORY: version, relevant, priority, relevance
+- ALL return fields are MANDATORY: version, relevant, priority, relevance, type
+- The "type" field must be set to "skill"
 - Use simple keyword matching (sync function)
 - Make keywords specific to avoid false positives
 - Priority should typically be "medium" for most skills
@@ -134,7 +135,8 @@ For an Exploration agent: ['explore', 'search codebase', 'find all', 'investigat
 
 ## IMPORTANT
 
-- ALL return fields are MANDATORY: version, relevant, priority, relevance
+- ALL return fields are MANDATORY: version, relevant, priority, relevance, type
+- The "type" field must be set to "agent"
 - Use simple keyword matching (sync function)
 - Agents typically have priority "medium" (lower than skills)
 - Focus on delegation language and complex reasoning keywords
