@@ -129,10 +129,7 @@ async function main() {
       },
     };
 
-    console.log();
     console.log(JSON.stringify(output, null, 2));
-    console.log();
-    console.log(directiveMessage);
   }
 
   process.exit(0);
