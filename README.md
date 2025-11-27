@@ -34,17 +34,24 @@ claude-rio provides explicit activation suggestions based on keyword matching:
 - ✅ **Cross-platform** - works on Windows (PowerShell), macOS, and Linux (bash)
 - ✅ **Auto-generates matchers** - AI-powered matcher creation for existing skills/agents
 
+## Requirements
+
+- Node.js >= 18.0.0
+- Claude Code CLI
+
+
 ## Quick Start
 
 ```bash
-# Install the hook framework
-npx claude-rio setup
-
-# Auto-generate matchers for existing skills/agents
-npx claude-rio setup --skills --agents
-
-# Or do everything at once
+# Install hook framework in your $HOME/.claude/hooks, and use your haiku to pre-generate matchers for your subagents and skills
 npx claude-rio setup --user --skills --agents
+
+# Install hook framework only ( if you want to make matchers yourself )
+npx claude-rio setup --user
+
+# Install the hook framework locally in one project ( useful for first try )
+# and generate matchers for project skills and agents
+npx claude-rio setup --skills --agents
 ```
 
 That's it! claude-rio integrates with your `.claude/settings.json` automatically.
@@ -54,20 +61,22 @@ That's it! claude-rio integrates with your `.claude/settings.json` automatically
 When you submit a prompt, claude-rio:
 1. Checks for matcher files in your skills and agents
 2. Runs matchers to determine relevance
-3. Suggests relevant skills/agents to Claude
+3. Suggests relevant skills/agents to Claude with special json according to [docs](https://code.claude.com/docs/en/hooks#userpromptsubmit-decision-control)
 
-Claude then sees:
+Claude then sees something like:
 ```
 SUGGESTED (consider invoking):
 - typescript-compiler: Skill tool, skill="typescript-compiler"
 - code-reviewer: Task tool, subagent_type="code-reviewer"
 ```
 
+And that affects probability of claude to actually invoke your skills and agents instead of ignoring them.
+
 ## Creating Matchers
 
 Matchers are simple JavaScript functions that return whether a skill/agent is relevant:
 
-### Example: Skill Matcher
+### Example Matcher
 
 ```javascript
 // .claude/skills/docker-helper/rio/UserPromptSubmit.matcher.js
@@ -79,6 +88,7 @@ module.exports = function (context) {
 
   // IMPORTANT: All fields are MANDATORY
   return {
+    type: "skill",         // For Agent pass 'agent' here
     version: "1.0",        // Required: always "1.0"
     relevant: hasKeyword,  // Required: true or false
     priority: hasKeyword ? "medium" : "low",  // Required: critical/high/medium/low
@@ -87,33 +97,11 @@ module.exports = function (context) {
 };
 ```
 
-### Example: Agent Matcher
+### Advanced Matchers Examples
 
-```javascript
-// .claude/agents/code-reviewer/rio/UserPromptSubmit.matcher.js
-module.exports = function (context) {
-  const prompt = context.prompt.toLowerCase();
+Since matchers are represented as arbitrary js functions, you can match on whatever you want - keywords in prompt, text patterns in history, config files, etc.
 
-  // Agents use delegation language keywords
-  const keywords = ['review code', 'code review', 'analyze', 'audit'];
-
-  const hasKeyword = keywords.some(kw => prompt.includes(kw));
-
-  // IMPORTANT: All fields are MANDATORY
-  return {
-    version: "1.0",
-    relevant: hasKeyword,
-    priority: hasKeyword ? "medium" : "low",  // Agents typically "medium" priority
-    relevance: hasKeyword ? "high" : "low",
-  };
-};
-```
-
-**Note:** The `type` field in matcher return values is optional and defaults based on directory path (`.claude/skills/` → "skill", `.claude/agents/` → "agent").
-
-## Examples
-
-claude-rio includes 5 example matcher patterns in `examples/`:
+claude-rio includes 5 example matcher patterns in `examples/` for inspiration:
 
 1. **keyword** - Simple keyword matching (fastest, most common)
 2. **typo-tolerant** - Handles misspellings and variations
@@ -121,118 +109,6 @@ claude-rio includes 5 example matcher patterns in `examples/`:
 4. **history-aware** - Uses conversation history for context-aware activation
 5. **config-based** - Reads keywords from configuration file
 
-View examples:
-```bash
-# After installing claude-rio
-node_modules/claude-rio/examples/keyword/UserPromptSubmit.matcher.js
-```
-
-Or browse on [GitHub](https://github.com/alex-popov-tech/claude-rio/tree/main/examples).
-
-## Installation
-
-### Project-level (recommended)
-```bash
-npx claude-rio setup
-```
-
-Installs to `./.claude/` - hooks active only for this project.
-
-### User-level
-```bash
-npx claude-rio setup --user
-```
-
-Installs to `~/.claude/` - hooks active for all your projects.
-
-## Auto-generating Matchers
-
-If you already have skills or agents without matchers, use:
-
-```bash
-# Generate matchers for skills only
-npx claude-rio setup --skills
-
-# Generate matchers for agents only
-npx claude-rio setup --agents
-
-# Generate matchers for both
-npx claude-rio setup --skills --agents
-```
-
-This command:
-- Scans `.claude/skills/` and/or `.claude/agents/` based on flags
-- Uses Claude AI (Haiku model) to generate appropriate matchers
-- Creates matchers with relevant keywords automatically
-
-## CLI Reference
-
-### `setup` - Setup framework and generate matchers
-
-**Usage:** `claude-rio setup [options]`
-
-**Options:**
-- `-u, --user` - Install at user level (~/.claude)
-- `-s, --skills` - Generate matchers for skills
-- `-a, --agents` - Generate matchers for agents
-
-**Examples:**
-```bash
-# Framework installation
-claude-rio setup              # Install to ./.claude
-claude-rio setup --user       # Install to ~/.claude
-
-# Matcher generation
-claude-rio setup --skills           # Skills only
-claude-rio setup --agents           # Agents only
-claude-rio setup --skills --agents  # Both
-
-# Combined operations
-claude-rio setup --user --skills --agents  # Install + generate all
-```
-
-## Integration
-
-claude-rio merges seamlessly with existing Claude Code setups:
-
-```json
-// Before
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      {"hooks": [{"command": "your-existing-hook"}]}
-    ]
-  }
-}
-
-// After claude-rio setup
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      {"hooks": [{"command": "your-existing-hook"}]},
-      {"hooks": [{"command": "bash .claude/hooks/rio/UserPromptSubmit/hook.sh"}]}
-    ]
-  }
-}
-```
-
-## Requirements
-
-- Node.js >= 18.0.0
-- Claude Code CLI
-- Windows (PowerShell), macOS, or Linux (bash)
-
-## Documentation
-
-- [Examples](https://github.com/alex-popov-tech/claude-rio/tree/main/examples) - Working matcher examples
-- [GitHub Repository](https://github.com/alex-popov-tech/claude-rio) - Source code and issues
-- [Claude Code Docs](https://claude.ai/code) - Official Claude Code documentation
-
-## Performance
-
-- **No matchers**: ~10-20ms (shell only, early exit)
-- **With matchers**: ~50-100ms (shell + Node.js)
-- **70% faster** than pure Node.js when no skills match
 
 ## License
 
