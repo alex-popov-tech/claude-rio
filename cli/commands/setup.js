@@ -312,7 +312,7 @@ async function generateMatchers(includeSkills, includeAgents, isUserLevel) {
  */
 async function setupCommand(options) {
   const isUserLevel = options.user || false;
-  const shouldInstallFramework = (!options.skills && !options.agents) || isUserLevel;
+  const shouldInstallFramework = true;
   const shouldGenerateMatchers = options.skills || options.agents;
 
   if (shouldInstallFramework) {
