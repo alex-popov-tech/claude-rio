@@ -32,7 +32,13 @@
       "Bash(npm run format:check:*)",
       "Bash(git mv:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git tag:*)",
+      "Bash(git push:*)",
+      "Bash(chmod:*)",
+      "Bash(docker run:*)",
+      "Bash(echo:*)",
+      "Bash(docker build:*)"
     ],
     "deny": [],
     "ask": []
