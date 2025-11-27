@@ -1,6 +1,6 @@
 {
   "name": "claude-rio",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Make Claude Code suggest the right skills and agents at the right time - automatically activate your custom workflows when they're most relevant",
   "keywords": [
     "claude",

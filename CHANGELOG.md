@@ -5,6 +5,24 @@ All notable changes to claude-rio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2025-11-27
+
+### Changed
+
+- **CommonJS compatibility**: Migrated all hook utilities from `.js` to `.cjs` extension
+  - Ensures compatibility across mixed ESM/CJS projects
+  - Files affected: formatter, handler, types, validations, and all utils/ modules
+
+### Added
+
+- **Remove command**: New `claude-rio remove` command for uninstalling hooks and cleaning up matchers
+  - Interactive cleanup process
+  - Supports both project-level and user-level installations
+
+### Fixed
+
+- Hook discovery updated to locate `.cjs` files correctly
+
 ## [1.1.1] - 2025-11-27
 
 ### Fixed
@@ -77,6 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Matcher validation (CLI and runtime)
 - Universal matcher template for easy customization
 
+[1.1.2]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.2
 [1.1.1]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.1
 [1.1.0]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.0
 [1.0.0]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.0.0
