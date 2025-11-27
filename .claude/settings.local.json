@@ -38,7 +38,10 @@
       "Bash(chmod:*)",
       "Bash(docker run:*)",
       "Bash(echo:*)",
-      "Bash(docker build:*)"
+      "Bash(docker build:*)",
+      "Bash(python3:*)",
+      "Skill(prettier)",
+      "Bash(git config:*)"
     ],
     "deny": [],
     "ask": []
