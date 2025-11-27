@@ -8,8 +8,8 @@
  * See: .claude/docs/CREATING_SKILLS.md
  */
 
-const { ok, err } = require('../utils/result');
-const { requireNonEmptyObject, requireNonEmptyString } = require('../utils/validations');
+const { ok, err } = require('../utils/result.cjs');
+const { requireNonEmptyObject, requireNonEmptyString } = require('../utils/validations.cjs');
 
 /**
  * @typedef {import('./types').UserPromptSubmitPayload} UserPromptSubmitPayload

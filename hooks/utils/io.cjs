@@ -9,7 +9,7 @@
  */
 
 const fs = require('fs/promises');
-const { ok, err, wrapAsync, wrapSync } = require('./result');
+const { ok, err, wrapAsync, wrapSync } = require('./result.cjs');
 
 /**
  * Read and parse JSON from stdin.

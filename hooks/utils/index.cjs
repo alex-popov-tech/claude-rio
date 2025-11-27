@@ -14,11 +14,11 @@
  * Usage: utils.io.readJsonFromStdin(), utils.logger.createLogger(), etc.
  */
 
-const io = require('./io');
-const logger = require('./logger');
-const result = require('./result');
-const validations = require('./validations');
-const transcript = require('./transcript');
+const io = require('./io.cjs');
+const logger = require('./logger.cjs');
+const result = require('./result.cjs');
+const validations = require('./validations.cjs');
+const transcript = require('./transcript.cjs');
 
 module.exports = {
   io,

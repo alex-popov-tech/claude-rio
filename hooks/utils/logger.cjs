@@ -9,7 +9,7 @@
  */
 
 const path = require('path');
-const { ensureDir, appendFile } = require('./io');
+const { ensureDir, appendFile } = require('./io.cjs');
 
 const LOGS_DIR = path.join(__dirname, '..', 'logs');
 

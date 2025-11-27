@@ -8,7 +8,7 @@
  * See: .claude/docs/CREATING_SKILLS.md
  */
 
-const { ok, err } = require('./result');
+const { ok, err } = require('./result.cjs');
 
 /**
  * Ensure a value is a non-empty object.

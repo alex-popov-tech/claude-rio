@@ -10,9 +10,9 @@
  */
 
 const path = require('path');
-const utils = require('../utils');
-const { validatePayload, validateMatcherModule, validateMatcherResult } = require('./validations');
-const { formatActiveSkillsAsDirective } = require('./formatter');
+const utils = require('../utils/index.cjs');
+const { validatePayload, validateMatcherModule, validateMatcherResult } = require('./validations.cjs');
+const { formatActiveSkillsAsDirective } = require('./formatter.cjs');
 
 /**
  * @typedef {import('./types').UserPromptSubmitPayload} UserPromptSubmitPayload
