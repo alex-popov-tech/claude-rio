@@ -1,3 +1,5 @@
+<img alt="claude-rio heading image" src="https://github.com/user-attachments/assets/9c1fe0d3-5ae5-4edf-8752-cbf0c364c93c" />
+
 # claude-rio
 
 **Deterministic matcher system for Claude Code that significantly improves skill and agent activation.**
