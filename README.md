@@ -1,4 +1,4 @@
-<img alt="claude-rio heading image" src="https://github.com/user-attachments/assets/9c1fe0d3-5ae5-4edf-8752-cbf0c364c93c" />
+<img alt="claude-rio heading image" src="https://github.com/user-attachments/assets/776a0996-efb2-4ac3-9249-9304cb7e2d89" />
 
 # claude-rio
 
