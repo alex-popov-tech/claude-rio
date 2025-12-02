@@ -77,16 +77,14 @@ module.exports = function (context) {
   // Convert prompt to lowercase for case-insensitive matching
   const prompt = context.prompt.toLowerCase();
 
-  // Check if any variation is present
-  // .some() short-circuits on first match for performance
-  const hasVariation = keywordVariations.some((variant) => prompt.includes(variant));
+  // Count how many variations are present
+  const matchCount = keywordVariations.filter((variant) => prompt.includes(variant)).length;
 
   // IMPORTANT: All fields are MANDATORY and must not be undefined/null
   return {
-    version: '1.0', // Required: always "1.0"
-    relevant: hasVariation, // Required: true or false
-    priority: hasVariation ? 'medium' : 'low', // Required: "critical" | "high" | "medium" | "low"
-    relevance: hasVariation ? 'high' : 'low', // Required: "high" | "medium" | "low"
+    version: '2.0', // Required: always "2.0"
+    matchCount: matchCount, // Required: number of matches (0+)
+    type: 'skill', // Required: "skill" or "agent"
   };
 };
 

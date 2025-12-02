@@ -12,30 +12,38 @@ set -euo pipefail
 # Determine hook directory (where this script lives)
 HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Determine skill and agent root directories
+# Determine skill, agent, and command root directories
 PROJECT_SKILLS="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/skills"
 USER_SKILLS="${HOME}/.claude/skills"
 PROJECT_AGENTS="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/agents"
 USER_AGENTS="${HOME}/.claude/agents"
+PROJECT_COMMANDS="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/commands"
+USER_COMMANDS="${HOME}/.claude/commands"
 
 # Find all matcher files
-# Using -L to follow symlinks (user skills/agents may be symlinked from dotfiles)
+# Using -L to follow symlinks (user skills/agents/commands may be symlinked from dotfiles)
 #
-# Skills and agents have different structures:
-# - Skills (subdirectories): .claude/skills/<skill>/rio/UserPromptSubmit.matcher.cjs
+# Skills, agents, and commands have different structures:
+# - Skills (subdirectories): .claude/skills/<skill>/rio/UserPromptSubmit.rio.matcher.cjs
 # - Agents (.md files): .claude/agents/<agent>.rio.matcher.cjs (sibling to .md file)
+# - Commands (.md files): .claude/commands/<command>.rio.matcher.cjs (sibling to .md file)
 
 # Find skill matchers (in rio subdirectories)
 SKILL_MATCHERS=$(find -L "$PROJECT_SKILLS" "$USER_SKILLS" \
-  -type f -path "*/rio/UserPromptSubmit.matcher.cjs" -print 2>/dev/null || true)
+  -type f -path "*/rio/UserPromptSubmit.rio.matcher.cjs" -print 2>/dev/null || true)
 
 # Find agent matchers (directly in agents directory, named *.rio.matcher.cjs)
 AGENT_MATCHERS=$(find -L "$PROJECT_AGENTS" "$USER_AGENTS" \
   -maxdepth 1 -type f -name "*.rio.matcher.cjs" -print 2>/dev/null || true)
 
-# Combine both sets of matchers
+# Find command matchers (directly in commands directory, named *.rio.matcher.cjs)
+COMMAND_MATCHERS=$(find -L "$PROJECT_COMMANDS" "$USER_COMMANDS" \
+  -maxdepth 1 -type f -name "*.rio.matcher.cjs" -print 2>/dev/null || true)
+
+# Combine all sets of matchers
 MATCHERS="${SKILL_MATCHERS}
-${AGENT_MATCHERS}"
+${AGENT_MATCHERS}
+${COMMAND_MATCHERS}"
 # Remove empty lines
 MATCHERS=$(echo "$MATCHERS" | grep -v '^$' || true)
 

@@ -57,50 +57,27 @@ module.exports = function (context) {
 
   // Check for keywords in prompt (case-insensitive)
   const prompt = context.prompt.toLowerCase();
-  const hasKeyword = keywords.some((kw) => prompt.includes(kw));
+  const keywordMatches = keywords.filter((kw) => prompt.includes(kw)).length;
 
   // Check for indicator files in project root
-  const hasIndicatorFile = indicatorFiles.some((file) => {
+  const fileMatches = indicatorFiles.filter((file) => {
     const filePath = path.join(context.cwd, file);
     return fs.existsSync(filePath);
-  });
+  }).length;
 
-  // MULTI-SIGNAL LOGIC:
-  // - Both keyword AND file present → HIGH confidence (critical/high priority)
-  // - Keyword OR file present → MEDIUM confidence (medium priority)
-  // - Neither present → Not relevant
+  // MULTI-SIGNAL COUNTING:
+  // - Count keyword matches (how many keywords found in prompt)
+  // - Count file matches (how many indicator files exist)
+  // - Total matchCount = keywordMatches + fileMatches
+  // This gives higher scores when both signals are present
 
-  if (hasKeyword && hasIndicatorFile) {
-    // STRONG SIGNAL: User mentioned Docker AND project has Docker files
-    // This is the highest confidence case
-    // IMPORTANT: All fields are MANDATORY and must not be undefined/null
-    return {
-      version: '1.0', // Required: always "1.0"
-      relevant: true, // Required: true or false
-      priority: 'high', // Required: "critical" | "high" | "medium" | "low"
-      relevance: 'high', // Required: "high" | "medium" | "low"
-    };
-  }
+  const matchCount = keywordMatches + fileMatches;
 
-  if (hasKeyword || hasIndicatorFile) {
-    // MEDIUM SIGNAL: Either keyword or indicator file present
-    // Still relevant but with lower confidence
-    // IMPORTANT: All fields are MANDATORY and must not be undefined/null
-    return {
-      version: '1.0', // Required: always "1.0"
-      relevant: true, // Required: true or false
-      priority: 'medium', // Required: "critical" | "high" | "medium" | "low"
-      relevance: hasKeyword ? 'high' : 'medium', // Required: "high" | "medium" | "low"
-    };
-  }
-
-  // No signals detected
   // IMPORTANT: All fields are MANDATORY and must not be undefined/null
   return {
-    version: '1.0', // Required: always "1.0"
-    relevant: false, // Required: true or false
-    priority: 'low', // Required: "critical" | "high" | "medium" | "low"
-    relevance: 'low', // Required: "high" | "medium" | "low"
+    version: '2.0', // Required: always "2.0"
+    matchCount: matchCount, // Required: number of matches (0+)
+    type: 'skill', // Required: "skill" or "agent"
   };
 };
 

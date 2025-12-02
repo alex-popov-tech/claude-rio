@@ -108,11 +108,10 @@ function validateMatcherModule(mod) {
  *
  * IMPORTANT: All fields are MANDATORY and must not be undefined/null.
  *
- * Required schema:
- * - version: string "1.0" (non-empty, trimmed)
- * - relevant: boolean
- * - priority: "critical" | "high" | "medium" | "low"
- * - relevance: "high" | "medium" | "low"
+ * Required schema v2.0:
+ * - version: string "2.0" (non-empty, trimmed)
+ * - matchCount: non-negative integer
+ * - type: "skill" | "agent" | "command" (optional, defaults to path-based detection)
  *
  * @param {any} result - The matcher result to validate
  * @returns {{ok: boolean, value?: MatcherResult, error?: string}}
@@ -133,38 +132,32 @@ function validateMatcherResult(result) {
   if (!result.version.trim()) {
     return err('Matcher result "version" must be a non-empty string');
   }
-  if (result.version !== '1.0') {
-    return err(`Matcher result "version" must be "1.0" (got: ${result.version})`);
+  if (result.version !== '2.0') {
+    return err(`Matcher result "version" must be "2.0" (got: ${result.version}). v1.0 matchers need migration - see CHANGELOG.md`);
   }
 
-  // Validate relevant field (MANDATORY - no undefined/null)
-  if (result.relevant === undefined || result.relevant === null) {
-    return err('Matcher result must have a "relevant" field (cannot be undefined or null)');
+  // Validate matchCount field (MANDATORY - no undefined/null)
+  if (result.matchCount === undefined || result.matchCount === null) {
+    return err('Matcher result must have a "matchCount" field (cannot be undefined or null)');
   }
-  if (typeof result.relevant !== 'boolean') {
-    return err(`Matcher result "relevant" must be a boolean (got type: ${typeof result.relevant})`);
+  if (typeof result.matchCount !== 'number') {
+    return err(`Matcher result "matchCount" must be a number (got type: ${typeof result.matchCount})`);
   }
-
-  // Validate priority field (MANDATORY - no undefined/null)
-  if (result.priority === undefined || result.priority === null) {
-    return err('Matcher result must have a "priority" field (cannot be undefined or null)');
+  if (!Number.isInteger(result.matchCount)) {
+    return err(`Matcher result "matchCount" must be an integer (got: ${result.matchCount})`);
   }
-  const validPriorities = ['critical', 'high', 'medium', 'low'];
-  if (!validPriorities.includes(result.priority)) {
-    return err(
-      `Matcher result "priority" must be one of: ${validPriorities.join(', ')} (got: ${result.priority})`
-    );
+  if (result.matchCount < 0) {
+    return err(`Matcher result "matchCount" must be non-negative (got: ${result.matchCount})`);
   }
 
-  // Validate relevance field (MANDATORY - no undefined/null)
-  if (result.relevance === undefined || result.relevance === null) {
-    return err('Matcher result must have a "relevance" field (cannot be undefined or null)');
-  }
-  const validRelevances = ['high', 'medium', 'low'];
-  if (!validRelevances.includes(result.relevance)) {
-    return err(
-      `Matcher result "relevance" must be one of: ${validRelevances.join(', ')} (got: ${result.relevance})`
-    );
+  // Validate type field (OPTIONAL)
+  if (result.type !== undefined && result.type !== null) {
+    const validTypes = ['skill', 'agent', 'command'];
+    if (!validTypes.includes(result.type)) {
+      return err(
+        `Matcher result "type" must be one of: ${validTypes.join(', ')} (got: ${result.type})`
+      );
+    }
   }
 
   return ok(result);

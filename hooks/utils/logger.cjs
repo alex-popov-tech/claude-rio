@@ -22,7 +22,8 @@ class Logger {
    */
   constructor(hookName) {
     this.hookName = hookName;
-    this.logPath = path.join(LOGS_DIR, `${hookName}.log`);
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    this.logPath = path.join(LOGS_DIR, `${hookName}-${today}.log`);
   }
 
   /**

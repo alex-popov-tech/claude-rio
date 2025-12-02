@@ -57,7 +57,6 @@ function requireBoolean(value, field, context) {
  * @property {string} version - Schema version (e.g., "1.0")
  * @property {boolean} relevant - Whether this skill is relevant to the prompt
  * @property {'critical' | 'high' | 'medium' | 'low'} priority - Skill priority level
- * @property {'high' | 'medium' | 'low'} relevance - Confidence level that this skill should be applied
  */
 
 /**
@@ -98,16 +97,10 @@ function validateMatcherResult(result) {
     return err(`Matcher result 'priority' must be one of: ${validPriorities.join(', ')}`);
   }
 
-  const validRelevance = ['high', 'medium', 'low'];
-  if (!validRelevance.includes(result.relevance)) {
-    return err(`Matcher result 'relevance' must be one of: ${validRelevance.join(', ')}`);
-  }
-
   return ok({
     version: result.version,
     relevant: result.relevant,
     priority: result.priority,
-    relevance: result.relevance,
   });
 }
 

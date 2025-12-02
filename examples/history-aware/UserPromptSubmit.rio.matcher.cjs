@@ -49,50 +49,24 @@ module.exports = async function (context) {
   // Keywords for TypeScript compilation
   const keywords = ['typescript', 'type', 'compile', 'tsc', 'build'];
 
-  // Quick synchronous check: is there a keyword in current prompt?
+  // Quick synchronous check: count keywords in current prompt
   const prompt = context.prompt.toLowerCase();
-  const hasKeyword = keywords.some((kw) => prompt.includes(kw));
+  const promptMatches = keywords.filter((kw) => prompt.includes(kw)).length;
 
-  // If no keyword in current prompt, check if TypeScript was discussed recently
-  if (!hasKeyword) {
-    // Load conversation history (cached - only parses once per hook invocation)
-    const history = await context.transcript.getConversationHistory(context.transcriptPath);
-
-    // Look at recent messages (last 10) to see if TypeScript was mentioned
-    const recentMessages = history.slice(-10);
-    const wasRecentlyMentioned = recentMessages.some((msg) =>
-      keywords.some((kw) => msg.content.toLowerCase().includes(kw))
-    );
-
-    if (!wasRecentlyMentioned) {
-      // No keyword in prompt, no recent history → not relevant
-      // IMPORTANT: All fields are MANDATORY and must not be undefined/null
-      return {
-        version: '1.0', // Required: always "1.0"
-        relevant: false, // Required: true or false
-        priority: 'low', // Required: "critical" | "high" | "medium" | "low"
-        relevance: 'low', // Required: "high" | "medium" | "low"
-      };
-    }
-
-    // Was mentioned recently but not in current prompt
-    // Suggest with lower priority (staying relevant from context)
-    // IMPORTANT: All fields are MANDATORY and must not be undefined/null
-    return {
-      version: '1.0', // Required: always "1.0"
-      relevant: true, // Required: true or false
-      priority: 'low', // Required: "critical" | "high" | "medium" | "low"
-      relevance: 'medium', // Required: "high" | "medium" | "low"
-    };
-  }
-
-  // Keyword IS present in current prompt
-  // Now check conversation history to determine priority and relevance
-
-  // Load conversation history (cached)
+  // Load conversation history (cached - only parses once per hook invocation)
   const history = await context.transcript.getConversationHistory(context.transcriptPath);
 
-  // Check for previous TypeScript errors in assistant messages
+  // Count historical context signals
+  let contextScore = 0;
+
+  // +1 for each recent mention (last 10 messages)
+  const recentMessages = history.slice(-10);
+  const recentMentions = recentMessages.filter((msg) =>
+    keywords.some((kw) => msg.content.toLowerCase().includes(kw))
+  ).length;
+  contextScore += Math.min(recentMentions, 3); // Cap at 3
+
+  // +2 for previous errors (strong signal user needs help)
   const hadPreviousErrors = history.some(
     (msg) =>
       msg.role === 'assistant' &&
@@ -101,56 +75,27 @@ module.exports = async function (context) {
         msg.content.includes('TypeScript error') ||
         msg.content.includes('TS'))
   );
+  if (hadPreviousErrors) {
+    contextScore += 2;
+  }
 
-  // Count how many times TypeScript was mentioned in the conversation
-  const mentionCount = history.filter((msg) =>
-    keywords.some((kw) => msg.content.toLowerCase().includes(kw))
-  ).length;
-
-  // Check if this is a follow-up to a previous TypeScript discussion
-  const recentMessages = history.slice(-5);
-  const isFollowUp = recentMessages.some((msg) =>
+  // +1 if this is a follow-up (mentioned in last 5 messages)
+  const veryRecentMessages = history.slice(-5);
+  const isFollowUp = veryRecentMessages.some((msg) =>
     keywords.some((kw) => msg.content.toLowerCase().includes(kw))
   );
-
-  // PRIORITY ESCALATION based on conversation context:
-  //
-  // CRITICAL: Previous errors detected (user is struggling)
-  // HIGH: Multiple mentions (3+) OR follow-up question
-  // MEDIUM: First or second mention
-  // LOW: Not applicable (already returned above)
-
-  if (hadPreviousErrors) {
-    // User had TypeScript errors before and is asking about it again
-    // This is CRITICAL - they need help resolving ongoing issues
-    // IMPORTANT: All fields are MANDATORY and must not be undefined/null
-    return {
-      version: '1.0', // Required: always "1.0"
-      relevant: true, // Required: true or false
-      priority: 'critical', // Required: "critical" | "high" | "medium" | "low"
-      relevance: 'high', // Required: "high" | "medium" | "low"
-    };
+  if (isFollowUp) {
+    contextScore += 1;
   }
 
-  if (mentionCount >= 3 || (isFollowUp && mentionCount >= 2)) {
-    // Topic mentioned multiple times or this is a follow-up
-    // User is working on TypeScript-related tasks → HIGH priority
-    // IMPORTANT: All fields are MANDATORY and must not be undefined/null
-    return {
-      version: '1.0', // Required: always "1.0"
-      relevant: true, // Required: true or false
-      priority: 'high', // Required: "critical" | "high" | "medium" | "low"
-      relevance: 'high', // Required: "high" | "medium" | "low"
-    };
-  }
+  // Total matchCount = prompt matches + context score
+  const matchCount = promptMatches + contextScore;
 
-  // First or second mention → MEDIUM priority
   // IMPORTANT: All fields are MANDATORY and must not be undefined/null
   return {
-    version: '1.0', // Required: always "1.0"
-    relevant: true, // Required: true or false
-    priority: 'medium', // Required: "critical" | "high" | "medium" | "low"
-    relevance: 'high', // Required: "high" | "medium" | "low"
+    version: '2.0', // Required: always "2.0"
+    matchCount: matchCount, // Required: number of matches (0+)
+    type: 'skill', // Required: "skill" or "agent"
   };
 };
 
@@ -233,7 +178,7 @@ module.exports = async function (context) {
  *    ).length;
  *
  *    if (errorMentions >= 3) {
- *      return { relevant: true, priority: "critical", relevance: "high" };
+ *      return { version: "1.0", relevant: true, priority: "critical" };
  *    }
  *
  * EXAMPLE 2: Check If Tool Was Used
@@ -244,7 +189,7 @@ module.exports = async function (context) {
  *
  *    if (hasKeyword && !ranBuild) {
  *      // User mentioned build but hasn't run it yet
- *      return { relevant: true, priority: "high", relevance: "high" };
+ *      return { version: "1.0", relevant: true, priority: "high" };
  *    }
  *
  * EXAMPLE 3: Detect Follow-up Questions

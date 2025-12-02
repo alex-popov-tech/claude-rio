@@ -1,8 +1,8 @@
 /**
- * EXAMPLE: Simple Keyword Matcher
+ * EXAMPLE: Simple Keyword Matcher (v2.0)
  *
- * This is the simplest and most common matcher pattern. It checks if the user's
- * prompt contains any of your specified keywords using case-insensitive substring matching.
+ * This is the simplest and most common matcher pattern. It counts how many
+ * keywords from your list appear in the user's prompt using case-insensitive matching.
  *
  * USE CASE:
  * Perfect for skills that focus on a specific tool, framework, or concept where the
@@ -18,7 +18,7 @@
  * - Fastest matcher pattern (~1ms execution)
  * - No dependencies, no file I/O, no async operations
  * - Easy to understand and customize
- * - Very low false negative rate for specific keywords
+ * - Natural ranking based on keyword match count
  *
  * WHEN TO USE:
  * - Your skill has unique, specific keywords
@@ -52,16 +52,14 @@ module.exports = function (context) {
   // Convert prompt to lowercase for case-insensitive matching
   const prompt = context.prompt.toLowerCase();
 
-  // Check if any keyword is present in the prompt
-  // .some() short-circuits on first match for better performance
-  const hasKeyword = keywords.some((keyword) => prompt.includes(keyword));
+  // Count how many keywords are present in the prompt
+  const matchCount = keywords.filter((keyword) => prompt.includes(keyword)).length;
 
   // IMPORTANT: All fields are MANDATORY and must not be undefined/null
   return {
-    version: '1.0', // Required: always "1.0"
-    relevant: hasKeyword, // Required: true or false
-    priority: hasKeyword ? 'medium' : 'low', // Required: "critical" | "high" | "medium" | "low"
-    relevance: hasKeyword ? 'high' : 'low', // Required: "high" | "medium" | "low"
+    version: '2.0', // Required: always "2.0"
+    matchCount: matchCount, // Required: number of matches (0+)
+    type: 'skill', // Required: "skill" or "agent"
   };
 };
 
@@ -69,7 +67,7 @@ module.exports = function (context) {
  * PERFORMANCE NOTES:
  * - Execution time: ~1ms (fastest matcher pattern)
  * - .includes() is optimized for substring matching
- * - .some() stops on first match (no need to check all keywords)
+ * - .filter() counts all matches (scoring is done by handler)
  * - No file I/O, no async operations, no external dependencies
  *
  * CUSTOMIZATION TIPS:
@@ -79,12 +77,13 @@ module.exports = function (context) {
  *    - Include common variations (e.g., "docker" and "dockerfile")
  *    - Consider both singular and plural forms if needed
  *    - Think about what users actually type in prompts
+ *    - Aim for 5-8 keywords for best results
  *
- * 2. ADJUSTING PRIORITY:
- *    - "critical" = Urgent, time-sensitive workflows (build failures, blockers)
- *    - "high" = Important, commonly needed (running tests, compilation)
- *    - "medium" = Helpful, frequently used (linting, formatting)
- *    - "low" = Optional, nice-to-have (documentation, examples)
+ * 2. SCORING BEHAVIOR:
+ *    - matchCount = 0: Not relevant, won't be shown
+ *    - matchCount = 1-2: Low relevance
+ *    - matchCount = 3-5: Medium relevance
+ *    - matchCount = 6+: High relevance (capped at 10 for scoring)
  *
  * 3. AVOIDING FALSE POSITIVES:
  *    - Keep keywords specific (avoid common words like "run", "check")
@@ -95,17 +94,17 @@ module.exports = function (context) {
  *    If your keywords are very short (2-3 characters), consider adding
  *    word boundary checks to avoid false positives:
  *
- *    const hasKeyword = keywords.some(keyword => {
+ *    const matchCount = keywords.filter(keyword => {
  *      const regex = new RegExp(`\\b${keyword}\\b`, 'i');
  *      return regex.test(context.prompt);
- *    });
+ *    }).length;
  *
  * TESTING YOUR MATCHER:
  *
  * Test with realistic prompts:
- * ✅ "Help me set up docker for my app" → relevant: true
- * ✅ "Why is my container not starting?" → relevant: true
- * ✅ "Create a Dockerfile for Node.js" → relevant: true
- * ❌ "Fix my React component" → relevant: false
- * ❌ "How do I use git?" → relevant: false
+ * ✅ "Help me set up docker for my app" → matchCount: 1 (docker)
+ * ✅ "Why is my docker container not starting?" → matchCount: 2 (docker, container)
+ * ✅ "Create a Dockerfile using docker-compose" → matchCount: 3 (dockerfile, docker-compose, compose)
+ * ❌ "Fix my React component" → matchCount: 0
+ * ❌ "How do I use git?" → matchCount: 0
  */

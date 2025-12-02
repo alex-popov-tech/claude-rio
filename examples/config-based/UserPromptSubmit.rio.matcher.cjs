@@ -51,7 +51,6 @@ module.exports = function (context) {
     enabled: true,
     keywords: ['docker', 'container', 'dockerfile'],
     priority: 'medium',
-    relevance: 'high',
     negativeKeywords: [], // Keywords that exclude activation
   };
 
@@ -81,54 +80,43 @@ module.exports = function (context) {
 
   // Check if skill is enabled in configuration
   if (!config.enabled) {
-    // IMPORTANT: All fields are MANDATORY and must not be undefined/null
+    // Disabled skills return matchCount of 0
     return {
-      version: '1.0', // Required: always "1.0"
-      relevant: false, // Required: true or false
-      priority: 'low', // Required: "critical" | "high" | "medium" | "low"
-      relevance: 'low', // Required: "high" | "medium" | "low"
+      version: '2.0',
+      matchCount: 0,
+      type: 'skill',
     };
   }
 
   // Convert prompt to lowercase for case-insensitive matching
   const prompt = context.prompt.toLowerCase();
 
-  // Check for positive keywords from configuration
-  const hasKeyword = config.keywords.some((kw) => prompt.includes(kw.toLowerCase()));
+  // Count positive keywords from configuration
+  const keywordMatches = config.keywords.filter((kw) =>
+    prompt.includes(kw.toLowerCase())
+  ).length;
 
   // Check for negative keywords from configuration
   // If negative keyword present, don't activate (even if positive keyword matches)
-  const hasNegative = config.negativeKeywords.some((kw) => prompt.includes(kw.toLowerCase()));
+  const hasNegative = config.negativeKeywords.some((kw) =>
+    prompt.includes(kw.toLowerCase())
+  );
 
-  // No positive keyword found
-  if (!hasKeyword) {
-    // IMPORTANT: All fields are MANDATORY and must not be undefined/null
-    return {
-      version: '1.0', // Required: always "1.0"
-      relevant: false, // Required: true or false
-      priority: 'low', // Required: "critical" | "high" | "medium" | "low"
-      relevance: 'low', // Required: "high" | "medium" | "low"
-    };
-  }
-
-  // Positive keyword found but negative keyword also present
+  // If negative keyword found, return matchCount of 0
   if (hasNegative) {
-    // IMPORTANT: All fields are MANDATORY and must not be undefined/null
     return {
-      version: '1.0', // Required: always "1.0"
-      relevant: false, // Required: true or false
-      priority: 'low', // Required: "critical" | "high" | "medium" | "low"
-      relevance: 'low', // Required: "high" | "medium" | "low"
+      version: '2.0',
+      matchCount: 0,
+      type: 'skill',
     };
   }
 
-  // Match found! Use configured priority and relevance
+  // Return keyword match count
   // IMPORTANT: All fields are MANDATORY and must not be undefined/null
   return {
-    version: '1.0', // Required: always "1.0"
-    relevant: true, // Required: true or false
-    priority: config.priority, // Required: from config
-    relevance: config.relevance, // Required: from config
+    version: '2.0', // Required: always "2.0"
+    matchCount: keywordMatches, // Required: number of matches (0+)
+    type: 'skill', // Required: "skill" or "agent"
   };
 };
 
@@ -149,14 +137,12 @@ module.exports = function (context) {
  *       "enabled": true,
  *       "keywords": ["docker", "container", "compose"],
  *       "negativeKeywords": ["kubernetes"],
- *       "priority": "high",
- *       "relevance": "high"
+ *       "priority": "high"
  *     },
  *     "typescript-compiler": {
  *       "enabled": true,
  *       "keywords": ["typescript", "tsc", "compile"],
- *       "priority": "critical",
- *       "relevance": "high"
+ *       "priority": "critical"
  *     }
  *   }
  * }
@@ -205,13 +191,12 @@ module.exports = function (context) {
  *   }
  * }
  *
- * STANDARD (keywords + priority + relevance):
+ * STANDARD (keywords + priority):
  * {
  *   "docker-helper": {
  *     "enabled": true,
  *     "keywords": ["docker", "container"],
- *     "priority": "high",
- *     "relevance": "high"
+ *     "priority": "high"
  *   }
  * }
  *
@@ -222,7 +207,6 @@ module.exports = function (context) {
  *     "keywords": ["docker", "container", "compose"],
  *     "negativeKeywords": ["kubernetes", "k8s"],
  *     "priority": "high",
- *     "relevance": "high",
  *     "customOptions": {
  *       "checkForDockerfile": true,
  *       "requireMultipleKeywords": false
@@ -236,16 +220,10 @@ module.exports = function (context) {
  *
  * function validateConfig(config) {
  *   const validPriorities = ['critical', 'high', 'medium', 'low'];
- *   const validRelevances = ['high', 'medium', 'low'];
  *
  *   // Validate priority
  *   if (!validPriorities.includes(config.priority)) {
  *     config.priority = 'medium'; // fallback
- *   }
- *
- *   // Validate relevance
- *   if (!validRelevances.includes(config.relevance)) {
- *     config.relevance = 'medium'; // fallback
  *   }
  *
  *   // Validate keywords is an array

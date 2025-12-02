@@ -41,7 +41,12 @@
       "Bash(docker build:*)",
       "Bash(python3:*)",
       "Skill(prettier)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "Bash(xargs cat:*)"
     ],
     "deny": [],
     "ask": []

@@ -28,7 +28,7 @@ function createTestContext() {
     sessionId: 'test-session-id',
     permissionMode: 'ask',
     meta: {
-      schemaVersion: '1.0',
+      schemaVersion: '2.0',
     },
     transcript: {
       getConversationHistory: async () => [],
@@ -87,11 +87,10 @@ async function validateMatcherFile(matcherPath) {
  *
  * IMPORTANT: All fields are MANDATORY and must not be undefined/null.
  *
- * Required schema:
- * - version: string "1.0" (non-empty, trimmed)
- * - relevant: boolean
- * - priority: "critical" | "high" | "medium" | "low"
- * - relevance: "high" | "medium" | "low"
+ * Required schema v2.0:
+ * - version: string "2.0" (non-empty, trimmed)
+ * - matchCount: non-negative integer
+ * - type: "skill" | "agent" | "command" (optional, defaults to path-based detection)
  *
  * @param {any} result - The result object from the matcher
  * @returns {ValidationResult} Validation result with error/details
@@ -128,62 +127,54 @@ function validateMatcherResult(result) {
       details: 'Version string is empty or whitespace-only',
     };
   }
-  if (result.version !== '1.0') {
+  if (result.version !== '2.0') {
     return {
       valid: false,
-      error: 'Matcher result "version" must be "1.0"',
-      details: `Got: ${result.version}`,
+      error: 'Matcher result "version" must be "2.0"',
+      details: `Got: ${result.version}. v1.0 matchers need migration - see CHANGELOG.md`,
     };
   }
 
-  // Validate relevant field (MANDATORY - no undefined/null)
-  if (result.relevant === undefined || result.relevant === null) {
+  // Validate matchCount field (MANDATORY - no undefined/null)
+  if (result.matchCount === undefined || result.matchCount === null) {
     return {
       valid: false,
-      error: 'Matcher result must have a "relevant" field (cannot be undefined or null)',
+      error: 'Matcher result must have a "matchCount" field (cannot be undefined or null)',
       details: 'Field is missing or null',
     };
   }
-  if (typeof result.relevant !== 'boolean') {
+  if (typeof result.matchCount !== 'number') {
     return {
       valid: false,
-      error: 'Matcher result "relevant" must be a boolean',
-      details: `Got type: ${typeof result.relevant}`,
+      error: 'Matcher result "matchCount" must be a number',
+      details: `Got type: ${typeof result.matchCount}`,
+    };
+  }
+  if (!Number.isInteger(result.matchCount)) {
+    return {
+      valid: false,
+      error: 'Matcher result "matchCount" must be an integer',
+      details: `Got: ${result.matchCount}`,
+    };
+  }
+  if (result.matchCount < 0) {
+    return {
+      valid: false,
+      error: 'Matcher result "matchCount" must be non-negative',
+      details: `Got: ${result.matchCount}`,
     };
   }
 
-  // Validate priority field (MANDATORY - no undefined/null)
-  if (result.priority === undefined || result.priority === null) {
-    return {
-      valid: false,
-      error: 'Matcher result must have a "priority" field (cannot be undefined or null)',
-      details: 'Field is missing or null',
-    };
-  }
-  const validPriorities = ['critical', 'high', 'medium', 'low'];
-  if (!validPriorities.includes(result.priority)) {
-    return {
-      valid: false,
-      error: `Matcher result "priority" must be one of: ${validPriorities.join(', ')}`,
-      details: `Got: ${result.priority}`,
-    };
-  }
-
-  // Validate relevance field (MANDATORY - no undefined/null)
-  if (result.relevance === undefined || result.relevance === null) {
-    return {
-      valid: false,
-      error: 'Matcher result must have a "relevance" field (cannot be undefined or null)',
-      details: 'Field is missing or null',
-    };
-  }
-  const validRelevances = ['high', 'medium', 'low'];
-  if (!validRelevances.includes(result.relevance)) {
-    return {
-      valid: false,
-      error: `Matcher result "relevance" must be one of: ${validRelevances.join(', ')}`,
-      details: `Got: ${result.relevance}`,
-    };
+  // Validate type field (OPTIONAL)
+  if (result.type !== undefined && result.type !== null) {
+    const validTypes = ['skill', 'agent', 'command'];
+    if (!validTypes.includes(result.type)) {
+      return {
+        valid: false,
+        error: `Matcher result "type" must be one of: ${validTypes.join(', ')}`,
+        details: `Got: ${result.type}`,
+      };
+    }
   }
 
   return { valid: true };

@@ -1,8 +1,8 @@
 /**
- * Universal UserPromptSubmit Matcher Template
+ * Universal UserPromptSubmit Matcher Template (v2.0)
  *
- * This template is used by the `setup-skills` command to auto-generate
- * matchers for skills and agents. Haiku fills in the keywords array
+ * This template is used by the `setup` command to auto-generate
+ * matchers for skills and agents. Claude Haiku fills in the keywords array
  * based on the skill/agent description.
  *
  * IMPORTANT: All return fields are MANDATORY and must not be undefined/null.
@@ -22,18 +22,16 @@ module.exports = function (context) {
 
   // TODO: Haiku fills this array with relevant keywords
   const keywords = [
-    // Keywords will be inserted here by setup-skills command
+    // Keywords will be inserted here by setup command
   ];
 
-  // Check if any keyword is present in the prompt
-  const hasKeyword = keywords.some((keyword) => prompt.includes(keyword));
+  // Count matching keywords
+  const matchCount = keywords.filter((keyword) => prompt.includes(keyword)).length;
 
   // IMPORTANT: All fields are MANDATORY and must not be undefined/null
   return {
-    version: '1.0', // Required: always "1.0"
-    relevant: hasKeyword, // Required: true or false
-    priority: hasKeyword ? 'medium' : 'low', // Required: "critical" | "high" | "medium" | "low"
-    relevance: hasKeyword ? 'high' : 'low', // Required: "high" | "medium" | "low"
+    version: '2.0', // Required: always "2.0"
+    matchCount: matchCount, // Required: number of matches (0+)
     type: 'skill', // TODO: Haiku sets to 'skill' or 'agent' based on context
   };
 };

@@ -2,20 +2,21 @@
 
 # claude-rio
 
-**Deterministic matcher system for Claude Code that significantly improves skill and agent activation.**
+**Deterministic matcher system for Claude Code that significantly improves skill, agent, and command activation.**
 
 [![npm version](https://img.shields.io/npm/v/claude-rio.svg)](https://www.npmjs.com/package/claude-rio)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## What is claude-rio?
 
-claude-rio adds keyword-based matching to [Claude Code](https://claude.ai/code) skills and agents, significantly increasing the probability that Claude will activate them when relevant.
+claude-rio adds keyword-based matching to [Claude Code](https://claude.ai/code) skills, agents, and commands, significantly increasing the probability that Claude will activate them when relevant.
 
 ### The Problem
 
-Claude Code auto-discovers skills and agents but doesn't consistently activate them:
+Claude Code auto-discovers skills, agents, and commands but doesn't consistently activate them:
 - Claude autonomously decides when to use skills (inconsistent)
 - Agents require perfect description phrasing (unreliable)
+- Commands may be overlooked in favor of direct implementation
 - "Claude doesn't use my skill" is a common issue
 
 ### The Solution
@@ -25,16 +26,16 @@ claude-rio provides explicit activation suggestions based on keyword matching:
 - **Claude still makes the final decision**, but with better awareness
 - Significantly increases activation probability without guaranteeing it
 
-**Important:** claude-rio improves activation by making Claude aware of relevant skills/agents. However, Claude makes the final decision on whether to use them. Activation depends on prompt clarity, skill relevance, and Claude's reasoning.
+**Important:** claude-rio improves activation by making Claude aware of relevant skills/agents/commands. However, Claude makes the final decision on whether to use them. Activation depends on prompt clarity, relevance, and Claude's reasoning.
 
 ## Key Features
 
-- ✅ **Deterministic matching** for both skills and agents
+- ✅ **Deterministic matching** for skills, agents, and commands
 - ✅ **Smooth integration** with existing Claude Code setups
 - ✅ **Zero dependencies** - uses only bash/sh and Node.js built-ins
 - ✅ **Fast execution** - shell preprocessing with early exit (~10-20ms when no matches)
 - ✅ **Cross-platform** - works on Windows (PowerShell), macOS, and Linux (bash)
-- ✅ **Auto-generates matchers** - AI-powered matcher creation for existing skills/agents
+- ✅ **Auto-generates matchers** - AI-powered matcher creation for existing skills/agents/commands
 
 ## Requirements
 
@@ -45,15 +46,15 @@ claude-rio provides explicit activation suggestions based on keyword matching:
 ## Quick Start
 
 ```bash
-# Install hook framework in your $HOME/.claude/hooks, and use your haiku to pre-generate matchers for your subagents and skills
-npx claude-rio setup --user --skills --agents
-
-# Install hook framework only ( if you want to make matchers yourself )
+# Install hook framework (user-level, applies to all projects)
 npx claude-rio setup --user
 
-# Install the hook framework locally in one project ( useful for first try )
-# and generate matchers for project skills and agents
-npx claude-rio setup --skills --agents
+# Generate matchers for all skills, agents, and commands using Claude Haiku
+npx claude-rio generate-matchers --user
+
+# Or install locally in one project (useful for first try)
+npx claude-rio setup
+npx claude-rio generate-matchers
 ```
 
 That's it! claude-rio integrates with your `.claude/settings.json` automatically.
@@ -61,22 +62,23 @@ That's it! claude-rio integrates with your `.claude/settings.json` automatically
 ## How It Works
 
 When you submit a prompt, claude-rio:
-1. Checks for matcher files in your skills and agents
+1. Checks for matcher files in your skills, agents, and commands
 2. Runs matchers to determine relevance
-3. Suggests relevant skills/agents to Claude with special json according to [docs](https://code.claude.com/docs/en/hooks#userpromptsubmit-decision-control)
+3. Suggests relevant skills/agents/commands to Claude with special json according to [docs](https://code.claude.com/docs/en/hooks#userpromptsubmit-decision-control)
 
 Claude then sees something like:
 ```
 SUGGESTED (consider invoking):
 - typescript-compiler: Skill tool, skill="typescript-compiler"
 - code-reviewer: Task tool, subagent_type="code-reviewer"
+- deploy: SlashCommand tool, command="/deploy"
 ```
 
-And that affects probability of claude to actually invoke your skills and agents instead of ignoring them.
+And that affects probability of claude to actually invoke your skills, agents, and commands instead of ignoring them.
 
 ## Creating Matchers
 
-Matchers are simple JavaScript functions that return whether a skill/agent is relevant:
+Matchers are simple JavaScript functions that return whether a skill/agent/command is relevant:
 
 ### Example Matcher
 
@@ -86,18 +88,22 @@ module.exports = function (context) {
   const prompt = context.prompt.toLowerCase();
   const keywords = ['docker', 'container', 'dockerfile'];
 
-  const hasKeyword = keywords.some(kw => prompt.includes(kw));
+  // Count how many keywords match
+  const matchCount = keywords.filter(kw => prompt.includes(kw)).length;
 
   // IMPORTANT: All fields are MANDATORY
   return {
-    type: "skill",         // For Agent pass 'agent' here
-    version: "1.0",        // Required: always "1.0"
-    relevant: hasKeyword,  // Required: true or false
-    priority: hasKeyword ? "medium" : "low",  // Required: critical/high/medium/low
-    relevance: hasKeyword ? "high" : "low",   // Required: high/medium/low
+    version: "2.0",         // Required: always "2.0"
+    matchCount: matchCount, // Required: number of matches (0+)
+    type: "skill",          // Required: "skill", "agent", or "command"
   };
 };
 ```
+
+**How it works:**
+- `matchCount = 0`: Not relevant, won't be shown
+- `matchCount > 0`: Ranked by score (higher count = higher rank)
+- Scores are capped at 10 to prevent keyword inflation
 
 ### Advanced Matchers Examples
 

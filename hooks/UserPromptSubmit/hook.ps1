@@ -13,35 +13,49 @@ Set-StrictMode -Version Latest
 # Determine hook directory (where this script lives)
 $HOOK_DIR = Split-Path -Parent $MyInvocation.MyCommand.Definition
 
-# Determine skill and agent root directories
+# Determine skill, agent, and command root directories
 if ($env:CLAUDE_PROJECT_DIR) {
     $PROJECT_SKILLS = Join-Path $env:CLAUDE_PROJECT_DIR ".claude\skills"
     $PROJECT_AGENTS = Join-Path $env:CLAUDE_PROJECT_DIR ".claude\agents"
+    $PROJECT_COMMANDS = Join-Path $env:CLAUDE_PROJECT_DIR ".claude\commands"
 } else {
     $PROJECT_SKILLS = Join-Path (Get-Location) ".claude\skills"
     $PROJECT_AGENTS = Join-Path (Get-Location) ".claude\agents"
+    $PROJECT_COMMANDS = Join-Path (Get-Location) ".claude\commands"
 }
 $USER_SKILLS = Join-Path $env:USERPROFILE ".claude\skills"
 $USER_AGENTS = Join-Path $env:USERPROFILE ".claude\agents"
+$USER_COMMANDS = Join-Path $env:USERPROFILE ".claude\commands"
 
-# Find all UserPromptSubmit.matcher.js files in both skills and agents directories
+# Find all matcher files in skills, agents, and commands directories
 # Get-ChildItem with -ErrorAction SilentlyContinue to suppress errors for non-existent directories
 $MATCHERS = @()
 
+# Skills: search recursively for UserPromptSubmit.rio.matcher.cjs in rio subdirectories
 if (Test-Path $PROJECT_SKILLS) {
-    $MATCHERS += Get-ChildItem -Path $PROJECT_SKILLS -Recurse -Filter "UserPromptSubmit.matcher.js" -File -ErrorAction SilentlyContinue
+    $MATCHERS += Get-ChildItem -Path $PROJECT_SKILLS -Recurse -Filter "UserPromptSubmit.rio.matcher.cjs" -File -ErrorAction SilentlyContinue
 }
 
 if (Test-Path $USER_SKILLS) {
-    $MATCHERS += Get-ChildItem -Path $USER_SKILLS -Recurse -Filter "UserPromptSubmit.matcher.js" -File -ErrorAction SilentlyContinue
+    $MATCHERS += Get-ChildItem -Path $USER_SKILLS -Recurse -Filter "UserPromptSubmit.rio.matcher.cjs" -File -ErrorAction SilentlyContinue
 }
 
+# Agents: search directly in agents directory for *.rio.matcher.cjs
 if (Test-Path $PROJECT_AGENTS) {
-    $MATCHERS += Get-ChildItem -Path $PROJECT_AGENTS -Recurse -Filter "UserPromptSubmit.matcher.js" -File -ErrorAction SilentlyContinue
+    $MATCHERS += Get-ChildItem -Path $PROJECT_AGENTS -Filter "*.rio.matcher.cjs" -File -ErrorAction SilentlyContinue
 }
 
 if (Test-Path $USER_AGENTS) {
-    $MATCHERS += Get-ChildItem -Path $USER_AGENTS -Recurse -Filter "UserPromptSubmit.matcher.js" -File -ErrorAction SilentlyContinue
+    $MATCHERS += Get-ChildItem -Path $USER_AGENTS -Filter "*.rio.matcher.cjs" -File -ErrorAction SilentlyContinue
+}
+
+# Commands: search directly in commands directory for *.rio.matcher.cjs
+if (Test-Path $PROJECT_COMMANDS) {
+    $MATCHERS += Get-ChildItem -Path $PROJECT_COMMANDS -Filter "*.rio.matcher.cjs" -File -ErrorAction SilentlyContinue
+}
+
+if (Test-Path $USER_COMMANDS) {
+    $MATCHERS += Get-ChildItem -Path $USER_COMMANDS -Filter "*.rio.matcher.cjs" -File -ErrorAction SilentlyContinue
 }
 
 # Early exit if no matchers found - no need to launch Node.js
@@ -55,6 +69,6 @@ $env:MATCHER_PATHS = ($MATCHERS | ForEach-Object { $_.FullName }) -join "`n"
 
 # Execute Node.js handler
 # Node.js will read JSON payload from stdin as before
-$handlerPath = Join-Path $HOOK_DIR "handler.js"
+$handlerPath = Join-Path $HOOK_DIR "handler.cjs"
 & node $handlerPath
 exit $LASTEXITCODE

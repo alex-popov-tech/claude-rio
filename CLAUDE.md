@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Purpose
 
-claude-rio is a hook framework for Claude Code CLI that improves skill and agent activation through deterministic keyword matching. It provides explicit suggestions to Claude about relevant skills/agents based on user prompts, significantly increasing activation probability.
+claude-rio is a hook framework for Claude Code CLI that improves skill, agent, and command activation through deterministic keyword matching. It provides explicit suggestions to Claude about relevant skills/agents/commands based on user prompts, significantly increasing activation probability.
 
 ## Technology Stack
 
@@ -21,8 +21,9 @@ claude-rio/
 ├── cli/                           # Command-line interface
 │   ├── index.js                   # Main CLI entry point
 │   ├── commands/
-│   │   ├── setup.js               # Setup/install framework + generate matchers
-│   │   └── remove.js              # Uninstall framework + cleanup matchers
+│   │   ├── setup.js               # Install hook framework
+│   │   ├── generate-matchers.js   # Generate matchers using Claude Haiku
+│   │   └── remove.js              # Uninstall framework + all matchers
 │   └── utils/
 │       ├── claude-checker.js      # Check if Claude CLI is available
 │       ├── claude-generator.js    # Generate matchers using Claude Haiku
@@ -30,7 +31,7 @@ claude-rio/
 │       ├── matcher-validator.js   # Validate matcher structure and fields
 │       ├── platform.js            # OS detection (Windows/Unix)
 │       ├── prompt-builder.js      # Build prompts for Claude to generate matchers
-│       └── skill-scanner.js       # Scan .claude for skills/agents
+│       └── skill-scanner.js       # Scan .claude for skills/agents/commands
 ├── hooks/                         # Hook framework (distributed to .claude)
 │   ├── UserPromptSubmit/
 │   │   ├── hook.sh                # Shell wrapper (finds matchers) - Unix
@@ -73,6 +74,7 @@ The system uses a **shell-first approach** to minimize overhead:
    - Uses `find` command to locate matcher files
    - Searches skills: `.claude/skills/*/rio/UserPromptSubmit.matcher.cjs`
    - Searches agents: `.claude/agents/*.rio.matcher.cjs`
+   - Searches commands: `.claude/commands/*.rio.matcher.cjs`
    - If no matchers found → exits immediately (~10-20ms)
    - If matchers found → passes paths to Node.js via `MATCHER_PATHS` env var
 
@@ -87,23 +89,29 @@ The system uses a **shell-first approach** to minimize overhead:
 
 ### Matchers
 
-Matchers are JavaScript functions that determine skill/agent relevance:
+Matchers are JavaScript functions that determine skill/agent/command relevance:
 
 - **Input:** Context object with `{prompt, cwd, transcriptPath, sessionId, permissionMode, meta, transcript}`
-- **Output:** `{version: "1.0", relevant: boolean, priority: string, relevance: string, type: string}`
+- **Output:** `{version: "2.0", matchCount: number, type: string}`
 - **Validation:** All fields are MANDATORY (no undefined/null allowed)
 - **Types:** Sync or async (use async only for conversation history)
+- **Scoring:** Handler calculates `score = min(matchCount, 10) / maxMatchCount`
 
 **Required Output Fields:**
-- `version`: Always "1.0"
-- `relevant`: boolean - Whether skill/agent is relevant
-- `priority`: "critical" | "high" | "medium" | "low"
-- `relevance`: "high" | "medium" | "low"
-- `type`: "skill" | "agent" - Type of matcher
+- `version`: Always "2.0"
+- `matchCount`: Number of keyword matches (0+, capped at 10 for scoring)
+- `type`: "skill" | "agent" | "command" - Type of matcher
 
-### Skills vs Agents
+**How Scoring Works:**
+1. Matchers count keyword matches and return `matchCount`
+2. Handler caps each `matchCount` at 10 to prevent keyword inflation
+3. Handler calculates relative scores: `score = cappedCount / maxMatchCount`
+4. Items with `matchCount > 0` are ranked by score (highest first)
+5. Items with `matchCount = 0` are filtered out
 
-Per Claude Code documentation, skills and agents have **different structures**:
+### Skills vs Agents vs Commands
+
+Per Claude Code documentation, skills, agents, and commands have **different structures**:
 
 **Skills** (subdirectories with SKILL.md):
 - Definition: `.claude/skills/<skill-name>/SKILL.md`
@@ -111,6 +119,7 @@ Per Claude Code documentation, skills and agents have **different structures**:
 - Structure: Skills are directories containing SKILL.md and optional code
 - Purpose: Deterministic workflows (build, test, lint)
 - Discovery: Hook searches `.claude/skills/*/rio/UserPromptSubmit.rio.matcher.cjs`
+- Tool: `Skill tool, skill="<name>"`
 
 **Agents** (individual .md files):
 - Definition: `.claude/agents/<agent-name>.md`
@@ -118,6 +127,15 @@ Per Claude Code documentation, skills and agents have **different structures**:
 - Structure: Agents are single .md files with sibling matcher files
 - Purpose: Complex reasoning tasks (review, refactor, analyze)
 - Discovery: Hook searches `.claude/agents/*.rio.matcher.cjs`
+- Tool: `Task tool, subagent_type="<name>"`
+
+**Commands** (individual .md files):
+- Definition: `.claude/commands/<command-name>.md`
+- Matcher: `.claude/commands/<command-name>.rio.matcher.cjs` (sibling to .md file)
+- Structure: Commands are single .md files with sibling matcher files
+- Purpose: Slash commands for user-invoked actions (deploy, format, test)
+- Discovery: Hook searches `.claude/commands/*.rio.matcher.cjs`
+- Tool: `SlashCommand tool, command="/<name>"`
 
 ## Development Guidelines
 
@@ -132,8 +150,9 @@ Examples live in `examples/<pattern-name>/UserPromptSubmit.rio.matcher.cjs`. Eac
 ### Modifying CLI Commands
 
 CLI commands are in `cli/commands/`:
-- `setup.js` - Install framework and/or generate matchers using Claude Haiku
-- `remove.js` - Uninstall framework and cleanup matchers
+- `setup.js` - Install hook framework only
+- `generate-matchers.js` - Generate matchers for all skills/agents/commands using Claude Haiku
+- `remove.js` - Uninstall framework and all matchers
 
 **CLI Utilities** in `cli/utils/`:
 - `claude-checker.js` - Verify Claude CLI availability
@@ -142,7 +161,7 @@ CLI commands are in `cli/commands/`:
 - `matcher-validator.js` - Validate matcher structure and required fields
 - `platform.js` - OS detection for cross-platform support
 - `prompt-builder.js` - Generate prompts for Claude to create matchers
-- `skill-scanner.js` - Scan for skills/agents needing matchers
+- `skill-scanner.js` - Scan for skills/agents/commands needing matchers
 
 ### Testing Hooks
 
@@ -163,13 +182,12 @@ node cli/utils/matcher-validator.js .claude/skills/my-skill/rio/UserPromptSubmit
 
 # Expected output on success:
 # ✓ Matcher is valid
-# ✓ All required fields present: version, relevant, priority, relevance, type
+# ✓ All required fields present: version, relevant, priority, type
 # ✓ Field types correct
 
 # Example validation errors:
 # ✗ Missing required field: type
 # ✗ Invalid priority: must be critical|high|medium|low, got "important"
-# ✗ relevance must be a string, got boolean
 ```
 
 ## Common Tasks
@@ -180,18 +198,18 @@ node cli/utils/matcher-validator.js .claude/skills/my-skill/rio/UserPromptSubmit
 # Development mode (from repo)
 node cli/index.js setup                        # Install framework (project-level)
 node cli/index.js setup --user                 # Install framework (user-level)
-node cli/index.js setup --skills --agents      # Install + generate matchers
-node cli/index.js remove                       # Remove framework (keeps matchers)
-node cli/index.js remove --skills --agents     # Remove framework + all matchers
+node cli/index.js generate-matchers            # Generate matchers (project-level)
+node cli/index.js generate-matchers --user     # Generate matchers (user-level)
+node cli/index.js remove                       # Remove framework + all matchers
+node cli/index.js remove --user                # Remove user-level framework + matchers
 
 # As installed package
 npx claude-rio setup                           # Install framework (project-level)
 npx claude-rio setup --user                    # Install framework (user-level)
-npx claude-rio setup --skills --agents         # Install + generate matchers
-npx claude-rio setup --user --skills --agents  # Install user-level + generate matchers
-npx claude-rio remove                          # Remove framework (keeps matchers)
-npx claude-rio remove --skills --agents        # Remove framework + all matchers
-npx claude-rio remove --user --skills --agents # Remove user-level + all matchers
+npx claude-rio generate-matchers               # Generate matchers (project-level)
+npx claude-rio generate-matchers --user        # Generate matchers (user-level)
+npx claude-rio remove                          # Remove framework + all matchers
+npx claude-rio remove --user                   # Remove user-level framework + matchers
 ```
 
 ### Testing Hooks Manually
@@ -248,7 +266,7 @@ To add support for a new Claude Code hook event:
 ## Important Notes
 
 ### Matcher Requirements
-- **All fields are mandatory:** `version`, `relevant`, `priority`, `relevance`, `type` (no undefined/null values allowed)
+- **All fields are mandatory:** `version`, `matchCount`, `type` (no undefined/null values allowed)
 - **Strict validation:** Both CLI (`matcher-validator.js`) and runtime (`validations.cjs`) enforce field presence and types
 - **Return object must be synchronous or Promise-wrapped** for async matchers
 
@@ -256,6 +274,7 @@ To add support for a new Claude Code hook event:
 - **Hook files:** `.cjs` extension (e.g., `handler.cjs`, `types.cjs`)
 - **Skill matchers:** `UserPromptSubmit.rio.matcher.cjs` in `<skill-dir>/rio/` subdirectory
 - **Agent matchers:** `<agent-name>.rio.matcher.cjs` sibling to `<agent-name>.md`
+- **Command matchers:** `<command-name>.rio.matcher.cjs` sibling to `<command-name>.md`
 - **Template:** `matchers/UserPromptSubmit.rio.matcher.cjs` used by `setup` command
 
 ### CommonJS Compatibility
@@ -276,7 +295,71 @@ All hook files and matchers use `.cjs` extension to ensure CommonJS compatibilit
 - **Concurrency:** 5 parallel generations
 - **Timeout:** 60s per matcher
 - **Validation:** All generated matchers are validated before being saved
-- **Command:** `setup --skills --agents`
+- **Command:** `generate-matchers` (generates for all skills, agents, and commands)
+
+## Migration from v1.0 to v2.0
+
+**Breaking Change:** The matcher schema has changed from priority-based to match-count-based scoring.
+
+**Old Schema (v1.0):**
+```javascript
+return {
+  version: '1.0',
+  relevant: boolean,
+  priority: 'critical' | 'high' | 'medium' | 'low',
+  type: 'skill' | 'agent'
+};
+```
+
+**New Schema (v2.0):**
+```javascript
+return {
+  version: '2.0',
+  matchCount: number,  // 0+, count of keyword matches
+  type: 'skill' | 'agent' | 'command'
+};
+```
+
+**Migration Steps:**
+
+1. **Update version:** Change `'1.0'` to `'2.0'`
+2. **Replace `relevant` + `priority` with `matchCount`:**
+   - Change `.some(kw => prompt.includes(kw))` to `.filter(kw => prompt.includes(kw)).length`
+   - Remove priority logic
+3. **Keep `type` field:** No change needed
+
+**Example Migration:**
+
+Before (v1.0):
+```javascript
+const keywords = ['docker', 'container', 'dockerfile'];
+const hasKeyword = keywords.some(kw => prompt.includes(kw));
+return {
+  version: '1.0',
+  relevant: hasKeyword,
+  priority: hasKeyword ? 'medium' : 'low',
+  type: 'skill'
+};
+```
+
+After (v2.0):
+```javascript
+const keywords = ['docker', 'container', 'dockerfile'];
+const matchCount = keywords.filter(kw => prompt.includes(kw)).length;
+return {
+  version: '2.0',
+  matchCount: matchCount,
+  type: 'skill'
+};
+```
+
+**Regenerating Matchers:**
+The easiest migration path is to regenerate matchers using the `generate-matchers` command:
+```bash
+npx claude-rio generate-matchers
+```
+
+This will use Claude Haiku to generate v2.0-compatible matchers for all skills, agents, and commands.
 
 ## Reference Files & Resources
 
@@ -310,9 +393,9 @@ Hooks write debug logs to `hooks/logs/`:
 4. Test hook directly: `bash hooks/UserPromptSubmit/hook.sh < test-payload.json`
 
 **Validation errors:**
-- Ensure all fields are present: `version`, `relevant`, `priority`, `relevance`, `type`
-- Check field types: strings for all except `relevant` (boolean)
-- Verify enum values: `priority` (critical/high/medium/low), `relevance` (high/medium/low)
+- Ensure all fields are present: `version`, `matchCount`, `type`
+- Check field types: strings for `version` and `type`, number for `matchCount`
+- Verify enum values: `type` (skill/agent/command)
 
 **Setup command fails:**
 - Verify Claude CLI installed: `which claude` or `claude --version`
@@ -327,10 +410,11 @@ The two-tier architecture (shell → Node.js) optimizes for the common case wher
 ### Why .cjs Extension?
 CommonJS compatibility ensures hooks work in any project regardless of `package.json` `"type"` setting. The `.cjs` extension is explicit and prevents module resolution errors.
 
-### Why Separate Skill/Agent Discovery?
-Skills and agents have different structures (directories vs files), so separate `find` commands with appropriate patterns ensure correct discovery:
+### Why Separate Skill/Agent/Command Discovery?
+Skills, agents, and commands have different structures (directories vs files), so separate `find` commands with appropriate patterns ensure correct discovery:
 - Skills: `.claude/skills/*/rio/UserPromptSubmit.rio.matcher.cjs`
 - Agents: `.claude/agents/*.rio.matcher.cjs`
+- Commands: `.claude/commands/*.rio.matcher.cjs`
 
 ### Why Claude Haiku for Generation?
 Haiku provides the best balance of speed, cost, and quality for simple keyword extraction tasks. Matcher generation is a structured, deterministic task that doesn't require Sonnet/Opus reasoning capabilities.

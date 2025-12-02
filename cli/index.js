@@ -15,10 +15,8 @@ program
 
 program
   .command('setup')
-  .description('Setup claude-rio framework and/or generate matchers')
+  .description('Install claude-rio hook framework')
   .option('-u, --user', 'Install at user level (~/.claude)')
-  .option('-s, --skills', 'Generate matchers for skills')
-  .option('-a, --agents', 'Generate matchers for agents')
   .action(async (options) => {
     try {
       const setupCommand = require('./commands/setup');
@@ -30,11 +28,24 @@ program
   });
 
 program
+  .command('generate-matchers')
+  .description('Generate matchers for all skills and agents using Claude Haiku')
+  .option('-u, --user', 'Generate matchers at user level (~/.claude)')
+  .option('-a, --all', 'Generate for all entities without interactive selection')
+  .action(async (options) => {
+    try {
+      const generateMatchersCommand = require('./commands/generate-matchers');
+      await generateMatchersCommand(options);
+    } catch (error) {
+      console.error(chalk.red('Error:'), error.message);
+      process.exit(1);
+    }
+  });
+
+program
   .command('remove')
-  .description('Remove claude-rio from project or user installation')
+  .description('Remove claude-rio framework and all generated matchers')
   .option('-u, --user', 'Remove from user level (~/.claude)')
-  .option('-s, --skills', 'Remove matchers for skills')
-  .option('-a, --agents', 'Remove matchers for agents')
   .action(async (options) => {
     try {
       const removeCommand = require('./commands/remove');
@@ -44,20 +55,5 @@ program
       process.exit(1);
     }
   });
-
-// Future commands can be added here:
-// program
-//   .command('add <skill-name>')
-//   .description('Add a new skill')
-//   .action(async (skillName, options) => {
-//     // Implementation
-//   });
-
-// program
-//   .command('validate')
-//   .description('Validate hook configuration')
-//   .action(async () => {
-//     // Implementation
-//   });
 
 program.parse();

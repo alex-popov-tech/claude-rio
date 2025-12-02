@@ -60,37 +60,29 @@
  * Result object returned by matcher functions.
  *
  * @typedef {Object} MatcherResult
- * @property {string} version - Schema version (e.g., "1.0")
- * @property {boolean} relevant - Whether this skill/agent is relevant to the prompt
- * @property {'critical' | 'high' | 'medium' | 'low'} priority - Priority level
- * @property {'high' | 'medium' | 'low'} relevance - Confidence level that this should be applied
- * @property {'skill' | 'agent'} [type] - Optional: type of item (defaults to path-based detection)
+ * @property {string} version - Schema version (must be "2.0")
+ * @property {number} matchCount - Number of matching keywords (0+)
+ * @property {'skill' | 'agent' | 'command'} [type] - Optional: type of item (defaults to path-based detection)
  *
- * Priority levels:
- * - 'critical': MUST be invoked immediately before any other actions
- * - 'high': Strongly recommended for this context
- * - 'medium': Suggested but optional
- * - 'low': May be relevant but not prioritized
- *
- * Relevance levels:
- * - 'high': Very confident this is relevant
- * - 'medium': Moderately confident this applies
- * - 'low': Low confidence or tangentially related
+ * Scoring:
+ * - Handler calculates score = min(matchCount, 10) / maxMatchCount
+ * - Matchers with matchCount > 0 are considered relevant
+ * - Higher matchCount = higher rank in output
  *
  * Type field:
  * - 'skill': Suggests invoking via Skill tool
  * - 'agent': Suggests delegating via Task tool
+ * - 'command': Suggests invoking via SlashCommand tool
  * - If omitted, type is auto-detected from matcher file location
  */
 
 /**
- * Active skill/agent information after matcher evaluation.
+ * Active skill/agent/command information after matcher evaluation.
  *
  * @typedef {Object} ActiveSkill
- * @property {string} name - Skill or agent name
- * @property {'critical' | 'high' | 'medium' | 'low'} priority - Priority level
- * @property {'high' | 'medium' | 'low'} relevance - Confidence level
- * @property {'skill' | 'agent'} type - Type (skill or agent)
+ * @property {string} name - Skill, agent, or command name
+ * @property {number} score - Relative score (0.0-1.0)
+ * @property {'skill' | 'agent' | 'command'} type - Type (skill, agent, or command)
  */
 
 module.exports = {};

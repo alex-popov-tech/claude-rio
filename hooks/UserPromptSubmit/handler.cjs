@@ -54,29 +54,41 @@ async function main() {
     .filter((p) => p.length > 0);
 
   // Build matcher file info from paths
-  // Skills and agents have different path structures:
+  // Skills, agents, and commands have different path structures:
   // - Skills: .../skills/<name>/rio/UserPromptSubmit.matcher.cjs (name from grandparent dir)
   // - Agents: .../agents/<name>.rio.matcher.cjs (name from filename, without .rio.matcher.cjs)
+  // - Commands: .../commands/<name>.rio.matcher.cjs (name from filename, without .rio.matcher.cjs)
   const matcherFiles = matcherPaths.map((matcherPath) => {
     const isAgent =
       matcherPath.includes('/.claude/agents/') || matcherPath.includes('\\.claude\\agents\\');
+    const isCommand =
+      matcherPath.includes('/.claude/commands/') || matcherPath.includes('\\.claude\\commands\\');
 
     let name;
+    let detectedType;
+
     if (isAgent) {
       // Agent matcher: extract name from filename (e.g., "my-agent.rio.matcher.cjs" -> "my-agent")
       const filename = path.basename(matcherPath);
       name = filename.replace(/\.rio\.matcher\.cjs$/, '');
+      detectedType = 'agent';
+    } else if (isCommand) {
+      // Command matcher: extract name from filename (e.g., "my-command.rio.matcher.cjs" -> "my-command")
+      const filename = path.basename(matcherPath);
+      name = filename.replace(/\.rio\.matcher\.cjs$/, '');
+      detectedType = 'command';
     } else {
       // Skill matcher: extract name from grandparent directory
       const rioDir = path.dirname(matcherPath); // .../name/rio
       const itemDir = path.dirname(rioDir); // .../name
       name = path.basename(itemDir); // name
+      detectedType = 'skill';
     }
 
     return {
       name: name,
       matcherPath: matcherPath,
-      detectedType: isAgent ? 'agent' : 'skill',
+      detectedType: detectedType,
     };
   });
 
@@ -98,7 +110,7 @@ async function main() {
 
     // Meta information
     meta: {
-      schemaVersion: '1.0',
+      schemaVersion: '2.0',
     },
 
     // Transcript utilities namespace (cached)
@@ -128,6 +140,14 @@ async function main() {
         additionalContext: directiveMessage,
       },
     };
+
+    // Log final output before sending
+    await logger.log({
+      level: 'info',
+      event: 'output-generated',
+      itemCount: activeItems.length,
+      items: activeItems.map((i) => ({ name: i.name, type: i.type, score: i.score })),
+    });
 
     console.log(JSON.stringify(output, null, 2));
   }
@@ -199,17 +219,49 @@ async function runMatchers(matcherFiles, context) {
     }
 
     const matcherResult = resultValidation.value;
-    if (matcherResult.relevant) {
+
+    // Log successful matcher execution
+    await logger.log({
+      level: 'info',
+      event: 'matcher-executed',
+      name: matcherInfo.name,
+      result: {
+        version: matcherResult.version,
+        matchCount: matcherResult.matchCount,
+        type: matcherResult.type,
+      },
+    });
+
+    if (matcherResult.matchCount > 0) {
       // Use explicit type from matcher result, fallback to detected type from path
       const itemType = matcherResult.type || matcherInfo.detectedType;
 
       active.push({
         name: matcherInfo.name,
-        priority: matcherResult.priority,
-        relevance: matcherResult.relevance,
+        matchCount: matcherResult.matchCount,
         type: itemType,
       });
     }
+  }
+
+  // Calculate scores and sort
+  if (active.length > 0) {
+    const maxMatchCount = Math.max(...active.map((item) => Math.min(item.matchCount, 10)));
+
+    active.forEach((item) => {
+      const cappedCount = Math.min(item.matchCount, 10);
+      item.score = maxMatchCount > 0 ? cappedCount / maxMatchCount : 0;
+    });
+
+    active.sort((a, b) => b.score - a.score);
+
+    // Log score calculation
+    await logger.log({
+      level: 'info',
+      event: 'scores-calculated',
+      maxMatchCount,
+      items: active.map((i) => ({ name: i.name, matchCount: i.matchCount, score: i.score })),
+    });
   }
 
   return utils.result.ok(active);

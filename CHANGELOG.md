@@ -5,6 +5,90 @@ All notable changes to claude-rio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-11-30
+
+### BREAKING CHANGES
+
+**Matcher Schema v2.0** - Simplified match-count-based ranking system
+
+The matcher schema has been completely redesigned to use automatic scoring based on keyword match counts instead of manual priority assignment.
+
+**Old Schema (v1.0):**
+```javascript
+{
+  version: '1.0',
+  relevant: boolean,
+  priority: 'critical' | 'high' | 'medium' | 'low',
+  type: 'skill' | 'agent' | 'command'
+}
+```
+
+**New Schema (v2.0):**
+```javascript
+{
+  version: '2.0',
+  matchCount: number,  // 0+ matches, capped at 10 for scoring
+  type: 'skill' | 'agent' | 'command'
+}
+```
+
+### Added
+
+- **Commands support**: Hook now discovers and suggests slash commands alongside skills and agents
+
+### Changed
+
+- **Matcher schema**: Replaced `relevant` + `priority` with `matchCount` field
+- **Handler logic**: Automatic score calculation with `score = min(matchCount, 10) / maxMatchCount`
+- **Formatter output**: Simple ranked list instead of 4-tier priority grouping
+- **Validation**: Updated runtime and CLI validation for v2.0 schema
+- **Examples**: All 5 example matchers updated to v2.0 schema
+- **Template**: Universal matcher template now generates v2.0-compatible code
+- **AI generation**: Haiku prompts updated to generate v2.0 matchers
+
+### Benefits
+
+- **Simpler mental model**: Count matches → get ranked results
+- **Easier AI generation**: Haiku just fills keyword arrays, no priority decisions
+- **Self-balancing**: Natural ranking from match strength
+- **Gaming prevention**: Cap at 10 prevents keyword inflation
+- **Cleaner code**: Removed priority enum and tier grouping logic
+
+### Migration
+
+**Easiest path**: Regenerate matchers using the generate-matchers command:
+```bash
+npx claude-rio generate-matchers
+```
+
+**Manual migration**:
+1. Change `version` from `'1.0'` to `'2.0'`
+2. Replace `.some()` with `.filter().length` to count matches
+3. Remove `relevant` and `priority` fields
+4. Keep `type` field unchanged
+
+**Example**:
+```javascript
+// Before (v1.0)
+const hasKeyword = keywords.some(kw => prompt.includes(kw));
+return {
+  version: '1.0',
+  relevant: hasKeyword,
+  priority: hasKeyword ? 'medium' : 'low',
+  type: 'skill'
+};
+
+// After (v2.0)
+const matchCount = keywords.filter(kw => prompt.includes(kw)).length;
+return {
+  version: '2.0',
+  matchCount: matchCount,
+  type: 'skill'
+};
+```
+
+See CLAUDE.md for full migration guide.
+
 ## [1.1.3] - 2025-11-28
 
 ### Changed

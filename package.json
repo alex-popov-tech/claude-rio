@@ -1,6 +1,6 @@
 {
   "name": "claude-rio",
-  "version": "1.1.3",
+  "version": "2.0.0",
   "description": "Make Claude Code suggest the right skills and agents at the right time - automatically activate your custom workflows when they're most relevant",
   "keywords": [
     "claude",
@@ -47,6 +47,7 @@
     "prepublishOnly": "npm run lint && npm run format:check"
   },
   "dependencies": {
+    "@clack/prompts": "^0.11.0",
     "chalk": "^4.1.2",
     "commander": "^12.0.0",
     "fs-extra": "^11.2.0",
