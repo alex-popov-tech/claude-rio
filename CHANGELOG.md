@@ -5,6 +5,17 @@ All notable changes to claude-rio will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2025-12-04
+
+### Changed
+
+- **Tiered output formatting**: Formatter now displays results in tiers when multiple items have different scores
+  - "BEST MATCH" section highlights top-scoring items with their match count
+  - "Other matches" section shows remaining items with individual match counts
+  - Single-score results display simplified list without tiers
+- **Enhanced logging**: Handler now includes formatted output in logs for debugging
+- **Updated examples**: Fixed outdated v1.0 references in history-aware example comments
+
 ## [2.0.0] - 2025-11-30
 
 ### BREAKING CHANGES
@@ -186,6 +197,8 @@ See CLAUDE.md for full migration guide.
 - Matcher validation (CLI and runtime)
 - Universal matcher template for easy customization
 
+[2.0.1]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v2.0.1
+[2.0.0]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v2.0.0
 [1.1.3]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.3
 [1.1.2]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.2
 [1.1.1]: https://github.com/alex-popov-tech/claude-rio/releases/tag/v1.1.1

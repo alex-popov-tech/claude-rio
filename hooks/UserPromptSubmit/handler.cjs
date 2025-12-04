@@ -11,7 +11,11 @@
 
 const path = require('path');
 const utils = require('../utils/index.cjs');
-const { validatePayload, validateMatcherModule, validateMatcherResult } = require('./validations.cjs');
+const {
+  validatePayload,
+  validateMatcherModule,
+  validateMatcherResult,
+} = require('./validations.cjs');
 const { formatActiveSkillsAsDirective } = require('./formatter.cjs');
 
 /**
@@ -147,6 +151,7 @@ async function main() {
       event: 'output-generated',
       itemCount: activeItems.length,
       items: activeItems.map((i) => ({ name: i.name, type: i.type, score: i.score })),
+      output,
     });
 
     console.log(JSON.stringify(output, null, 2));

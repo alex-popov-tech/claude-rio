@@ -177,9 +177,8 @@ module.exports = async function (context) {
  *      (msg.content.includes('error') || msg.content.includes('failed'))
  *    ).length;
  *
- *    if (errorMentions >= 3) {
- *      return { version: "1.0", relevant: true, priority: "critical" };
- *    }
+ *    // Add error mentions to matchCount for higher scoring
+ *    matchCount += Math.min(errorMentions, 3);
  *
  * EXAMPLE 2: Check If Tool Was Used
  *    const toolUsage = await context.transcript.getToolUsage(path);
@@ -188,8 +187,8 @@ module.exports = async function (context) {
  *    );
  *
  *    if (hasKeyword && !ranBuild) {
- *      // User mentioned build but hasn't run it yet
- *      return { version: "1.0", relevant: true, priority: "high" };
+ *      // User mentioned build but hasn't run it yet - boost score
+ *      matchCount += 2;
  *    }
  *
  * EXAMPLE 3: Detect Follow-up Questions
